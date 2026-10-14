@@ -23,6 +23,26 @@ export async function POST(request){
  try{
   const body=await request.json();const query=String(body.query||'').trim();
   if(!query||query.length>500)return Response.json({error:'יש להזין בקשת מתכון עד 500 תווים'},{status:400});
+  const geminiKey=process.env.GEMINI_API_KEY;
+  if(geminiKey){
+   try{
+    const model=process.env.GEMINI_MODEL||'gemini-2.5-flash';
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),18000);
+    let response;
+    try{
+     response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{
+      method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':geminiKey},
+      body:JSON.stringify({systemInstruction:{parts:[{text:'את קונדיטורית מקצועית. השיבי אך ורק בעברית תקנית וברורה. תני מתכון מקצועי עם שם, תפוקה, זמני הכנה, מרכיבים בכמויות מדויקות, הוראות ממוספרות, טמפרטורות, אלרגנים וטיפים. אל תציגי מידע שלא נבדק כעובדה.'}]},contents:[{role:'user',parts:[{text:query}]}],generationConfig:{maxOutputTokens:1800}}),
+      signal:controller.signal
+     });
+    }finally{clearTimeout(timeout)}
+    if(response.ok){
+     const data=await response.json();
+     const recipe=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
+     if(recipe)return Response.json({recipe,source:'Gemini'});
+    }else{console.error('Gemini request failed',response.status)}
+   }catch(e){console.error('Gemini unavailable',e?.name||'error')}
+  }
   const key=process.env.OPENAI_API_KEY;
   if(key){
    try{
