@@ -15,17 +15,41 @@ const catalog=[
 {title:'עוגת אופרה',emoji:'☕',category:'עוגות',detail:'ג׳וקונד • קפה ושוקולד',prompt:'עוגת אופרה צרפתית מקצועית בשכבות מדויקות'}];
 const categories=['הכול','פטיסרי','עוגות','טארטים','מאפי שמרים'];
 export default function Home(){
-const [query,setQuery]=useState(''),[recipe,setRecipe]=useState(''),[loading,setLoading]=useState(false),[error,setError]=useState(''),[category,setCategory]=useState('הכול'),[now,setNow]=useState(null),[weather,setWeather]=useState(''),[weatherBusy,setWeatherBusy]=useState(false),[selected,setSelected]=useState('');
+const [forecast,setForecast]=useState([]);const [query,setQuery]=useState(''),[recipe,setRecipe]=useState(''),[loading,setLoading]=useState(false),[error,setError]=useState(''),[category,setCategory]=useState('הכול'),[now,setNow]=useState(null),[weather,setWeather]=useState(''),[weatherBusy,setWeatherBusy]=useState(false),[selected,setSelected]=useState('');
 useEffect(()=>{setNow(new Date());const id=setInterval(()=>setNow(new Date()),30000);return()=>clearInterval(id)},[]);
 async function ask(text){const q=(text||query).trim();if(!q)return;setQuery(q);setSelected(q);setLoading(true);setError('');setRecipe('');try{const res=await fetch('/api/recipe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});const data=await res.json();if(!res.ok)throw new Error(data.error||'לא ניתן לקבל מתכון כרגע');setRecipe(data.recipe||'לא התקבל מתכון')}catch(e){setError(e.message)}finally{setLoading(false)}}
-function getWeather(){if(!navigator.geolocation){setWeather('מיקום אינו זמין בדפדפן');return}setWeatherBusy(true);setWeather('');navigator.geolocation.getCurrentPosition(async p=>{try{const {latitude,longitude}=p.coords;const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+latitude+'&longitude='+longitude+'&current=temperature_2m,weather_code&timezone=auto');if(!r.ok)throw Error();const d=await r.json();const code=d.current.weather_code;const icon=code===0?'☀️':code<4?'⛅':code<70?'🌧️':'🌨️';setWeather(icon+' '+Math.round(d.current.temperature_2m)+'°C')}catch{setWeather('לא ניתן לקבל מזג אוויר')}finally{setWeatherBusy(false)}},()=>{setWeather('נדרשת הרשאת מיקום');setWeatherBusy(false)},{timeout:10000,maximumAge:600000})}
+function weatherIcon(code){return code===0?'☀️':code<=3?'⛅':code<=48?'🌫️':code<=67?'🌧️':code<=77?'🌨️':code<=82?'🌦️':code<=86?'❄️':'⛈️'}
+function getWeather(){
+ if(!navigator.geolocation){setWeather('מיקום אינו זמין בדפדפן');return}
+ setWeatherBusy(true);setWeather('');setForecast([]);
+ navigator.geolocation.getCurrentPosition(async p=>{
+  try{
+   const {latitude,longitude}=p.coords;
+   const url='https://api.open-meteo.com/v1/forecast?latitude='+latitude+'&longitude='+longitude+'&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=5&timezone=auto';
+   const r=await fetch(url);if(!r.ok)throw Error('weather');const d=await r.json();
+   setWeather(weatherIcon(d.current.weather_code)+' '+Math.round(d.current.temperature_2m)+'°C כעת');
+   setForecast(d.daily.time.map((date,i)=>({date,icon:weatherIcon(d.daily.weather_code[i]),high:Math.round(d.daily.temperature_2m_max[i]),low:Math.round(d.daily.temperature_2m_min[i]),rain:d.daily.precipitation_probability_max[i]})));
+  }catch{setWeather('לא ניתן לקבל תחזית')}finally{setWeatherBusy(false)}
+ },()=>{setWeather('נדרשת הרשאת מיקום');setWeatherBusy(false)},{timeout:10000,maximumAge:600000})
+}
 const card={background:'#fff9fc',border:'1px solid #f3c4d8',borderRadius:20,padding:16,boxShadow:'0 4px 16px #b24b7920'};
 return <main style={{minHeight:'100vh',background:'radial-gradient(circle at 15% 12%,#fff8fc,transparent 38%),linear-gradient(135deg,#ffd0e4,#fce9f3 58%,#f7b6d5)',fontFamily:'Arial,sans-serif',color:'#70334f',padding:'18px 12px'}}>
 <section style={{maxWidth:1040,margin:'auto',background:'#ffffffdf',borderRadius:30,padding:'clamp(16px,4vw,38px)',boxShadow:'0 20px 70px #a8467730',border:'2px solid #fff'}}>
 <header style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap',alignItems:'center',fontSize:14,color:'#884766'}}>
 <span>🗓️ {now?new Intl.DateTimeFormat('he-IL',{dateStyle:'full',timeStyle:'short',timeZone:'Asia/Jerusalem'}).format(now):'טוענת תאריך ושעה...'}</span>
-<button onClick={getWeather} disabled={weatherBusy} style={{background:'#fff0f7',border:'1px solid #e9a3c4',padding:'9px 14px',borderRadius:24,color:'#9b2862',cursor:'pointer'}}>{weatherBusy?'בודקת מזג אוויר...':weather||'🌤️ הצגת מזג אוויר מקומי'}</button>
+<button onClick={getWeather} disabled={weatherBusy} style={{background:'#fff0f7',border:'1px solid #e9a3c4',padding:'9px 14px',borderRadius:24,color:'#9b2862',cursor:'pointer'}}>{weatherBusy?'בודקת מזג אוויר...':weather||'🌤️ תחזית מזג אוויר ל־5 ימים'}</button>
 </header>
+{forecast.length>0&&<section aria-label="תחזית מזג אוויר לחמישה ימים" style={{marginTop:14,padding:14,borderRadius:18,background:'#fff3f9',border:'1px solid #f1c7d8'}}>
+ <h2 style={{fontSize:17,margin:'0 0 12px',color:'#a52d6a'}}>🌤️ תחזית מקומית לחמשת הימים הקרובים</h2>
+ <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(105px,1fr))',gap:8}}>
+ {forecast.map(day=><div key={day.date} style={{background:'white',borderRadius:14,padding:'12px 8px',textAlign:'center',border:'1px solid #f2d4e2'}}>
+ <div style={{fontSize:13,fontWeight:'bold'}}>{new Intl.DateTimeFormat('he-IL',{weekday:'short',day:'numeric',month:'numeric'}).format(new Date(day.date+'T12:00:00'))}</div>
+ <div style={{fontSize:28,margin:'8px 0'}}>{day.icon}</div>
+ <div><strong>{day.high}°</strong> / {day.low}°</div>
+ <div style={{fontSize:12,marginTop:6}}>💧 {day.rain??0}%</div>
+ </div>)}
+ </div><p style={{fontSize:11,margin:'10px 0 0',color:'#95627c'}}>נתוני Open-Meteo לפי מיקום המכשיר, באישור המשתמש. אחוזי הגשם הם ההסתברות המרבית ליום.</p>
+ </section>}
 <div style={{textAlign:'center',fontSize:43,marginTop:16}}>🌸 🧁 🍰 🌷</div>
 <h1 style={{textAlign:'center',fontSize:'clamp(30px,6vw,52px)',margin:'8px 0',color:'#b82d70'}}>Rada’s Sweet Kitchen</h1>
 <p style={{textAlign:'center',fontSize:19,marginBottom:26}}>המטבח המתוק של רדה פרייברג · קונדיטוריה עם AI ✨</p>
