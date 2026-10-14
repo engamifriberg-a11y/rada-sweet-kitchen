@@ -39,7 +39,7 @@ export async function POST(request){
     if(response.ok){
      const data=await response.json();
      const recipe=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
-     if(recipe)return Response.json({recipe,source:'Gemini'});
+     if(recipe && /[א-ת]/.test(recipe) && !/[A-Za-z]{3,}/.test(recipe))return Response.json({recipe,source:'Gemini'});
     }else{console.error('Gemini request failed',response.status)}
    }catch(e){console.error('Gemini unavailable',e?.name||'error')}
   }
@@ -48,11 +48,9 @@ export async function POST(request){
    try{
     const client=new OpenAI({apiKey:key});
     const result=await client.responses.create({model:'gpt-4.1-mini',instructions:'את קונדיטורית מקצועית. כתבי בעברית מתכון מפורט, כמויות מדויקות, זמני הכנה ואפייה, שלבים וטיפים. צייני אלרגנים.',input:query,max_output_tokens:1500});
-    if(result.output_text)return Response.json({recipe:result.output_text,source:'AI'});
+    if(result.output_text && /[א-ת]/.test(result.output_text) && !/[A-Za-z]{3,}/.test(result.output_text))return Response.json({recipe:result.output_text,source:'AI'});
    }catch(e){console.error('AI provider unavailable',e?.status||'error')}
   }
-  const free=await freeRecipe(query);
-  if(free)return Response.json(free);
-  return Response.json({error:'לא נמצא מתכון מתאים במאגר החינמי. נסו שם קינוח אחר כגון עוגת שוקולד, עוגת גבינה או טארט לימון. ליצירת מתכון מותאם אישית נדרש חיבור AI.'},{status:404});
+  return Response.json({error:'כרגע לא ניתן להפיק מתכון בעברית. יש לוודא שמפתח Gemini הוגדר ב־Vercel וששירות הבינה המלאכותית זמין. לא נציג מתכונים באנגלית.'},{status:503});
  }catch{return Response.json({error:'שגיאה בבקשת המתכון'},{status:500})}
 }
