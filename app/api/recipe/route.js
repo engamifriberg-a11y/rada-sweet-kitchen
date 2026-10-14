@@ -23,6 +23,7 @@ export async function POST(request){
  try{
   const body=await request.json();const query=String(body.query||'').trim();
   if(!query||query.length>500)return Response.json({error:'יש להזין בקשת מתכון עד 500 תווים'},{status:400});
+  let geminiStatus='not_configured';
   const geminiKey=process.env.GEMINI_API_KEY;
   if(geminiKey){
    try{
@@ -39,18 +40,19 @@ export async function POST(request){
     if(response.ok){
      const data=await response.json();
      const recipe=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
-     if(recipe && /[א-ת]/.test(recipe) && !/[A-Za-z]{3,}/.test(recipe))return Response.json({recipe,source:'Gemini'});
-    }else{console.error('Gemini request failed',response.status)}
-   }catch(e){console.error('Gemini unavailable',e?.name||'error')}
+     if(recipe && /[א-ת]/.test(recipe))return Response.json({recipe,source:'Gemini'});
+     geminiStatus='empty_or_not_hebrew';
+    }else{geminiStatus=response.status===400?'invalid_request':response.status===401||response.status===403?'invalid_key_or_permissions':response.status===429?'rate_limit':'provider_error_'+response.status;console.error('Gemini request failed',response.status)}
+   }catch(e){geminiStatus=e?.name==='AbortError'?'timeout':'network_error';console.error('Gemini unavailable',e?.name||'error')}
   }
   const key=process.env.OPENAI_API_KEY;
   if(key){
    try{
     const client=new OpenAI({apiKey:key});
     const result=await client.responses.create({model:'gpt-4.1-mini',instructions:'את קונדיטורית מקצועית. כתבי בעברית מתכון מפורט, כמויות מדויקות, זמני הכנה ואפייה, שלבים וטיפים. צייני אלרגנים.',input:query,max_output_tokens:1500});
-    if(result.output_text && /[א-ת]/.test(result.output_text) && !/[A-Za-z]{3,}/.test(result.output_text))return Response.json({recipe:result.output_text,source:'AI'});
+    if(result.output_text && /[א-ת]/.test(result.output_text))return Response.json({recipe:result.output_text,source:'AI'});
    }catch(e){console.error('AI provider unavailable',e?.status||'error')}
   }
-  return Response.json({error:'כרגע לא ניתן להפיק מתכון בעברית. יש לוודא שמפתח Gemini הוגדר ב־Vercel וששירות הבינה המלאכותית זמין. לא נציג מתכונים באנגלית.'},{status:503});
+  return Response.json({error:geminiStatus==='not_configured'?'חיבור Gemini לא הוגדר ב־Vercel. יש להגדיר GEMINI_API_KEY ולבצע פריסה מחדש.':geminiStatus==='invalid_key_or_permissions'?'מפתח Gemini אינו תקין או שאין הרשאה להשתמש בו. יש ליצור מפתח חדש ולהגדירו ב־Vercel.':geminiStatus==='rate_limit'?'הגעת למגבלת השימוש החינמית של Gemini. יש להמתין ולנסות שוב.':geminiStatus==='timeout'?'שירות Gemini לא השיב בזמן. נסו שוב.':'לא ניתן ליצור כרגע מתכון בעברית. יש לבדוק את הגדרות Gemini ב־Vercel.',code:geminiStatus},{status:503});
  }catch{return Response.json({error:'שגיאה בבקשת המתכון'},{status:500})}
 }
