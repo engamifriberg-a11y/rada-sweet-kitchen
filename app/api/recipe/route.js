@@ -61,7 +61,7 @@ const SYSTEM =
   'שלבים ממוספרים, אלרגנים, ושתי הערות מקצועיות. בלי הקדמות ובלי סיכומים.';
 
 /** קריאה אחת ל־Gemini. מחזירה { text } או { error } — לעולם לא את המפתח. */
-async function callGemini({ prompt, maxTokens = 1800, timeoutMs = 15000, retried = false }) {
+async function callGemini({ prompt, maxTokens = 4000, timeoutMs = 25000, retried = false }) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { error: 'not_configured' };
 
@@ -79,7 +79,13 @@ async function callGemini({ prompt, maxTokens = 1800, timeoutMs = 15000, retried
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: SYSTEM }] },
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: maxTokens, temperature: 0.4 },
+          // דגמי flash חדשים מוציאים חלק מתקציב הטוקנים על חשיבה פנימית.
+          // תקציב קטן מדי מחזיר תשובה ריקה, ולכן התקציב נדיב והחשיבה מכובה.
+          generationConfig: {
+            maxOutputTokens: maxTokens,
+            temperature: 0.4,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
         signal: controller.signal,
       }
@@ -115,12 +121,16 @@ async function callGemini({ prompt, maxTokens = 1800, timeoutMs = 15000, retried
     }
 
     const data = await res.json();
-    const text = (data.candidates?.[0]?.content?.parts || [])
+    const cand = data.candidates?.[0];
+    const text = (cand?.content?.parts || [])
       .map((p) => p.text || '')
       .join('')
       .trim();
 
-    if (!text) return { error: 'empty_response' };
+    if (!text) {
+      const reason = cand?.finishReason || data.promptFeedback?.blockReason || null;
+      return { error: reason === 'MAX_TOKENS' ? 'truncated' : 'empty_response', detail: reason };
+    }
     if (!/[א-ת]/.test(text)) return { error: 'not_hebrew' };
     return { text };
   } catch (e) {
@@ -139,6 +149,7 @@ const MESSAGES = {
   timeout: 'היצירה לא הספיקה להשיב בזמן. נסי שוב.',
   network_error: 'לא ניתן להגיע לשירות היצירה.',
   empty_response: 'השירות החזיר תשובה ריקה.',
+  truncated: 'התשובה נקטעה. נסי בקשה קצרה וממוקדת יותר.',
   not_hebrew: 'השירות החזיר תשובה שאינה בעברית.',
 };
 
@@ -217,7 +228,7 @@ export async function GET(request) {
     return Response.json({ ...base, probe: 'not_configured', message: MESSAGES.not_configured });
   }
 
-  const r = await callGemini({ prompt: 'כתבי את המילה: תקין', maxTokens: 16, timeoutMs: 10000 });
+  const r = await callGemini({ prompt: 'כתבי את המילה: תקין', maxTokens: 256, timeoutMs: 15000 });
 
   // אם הקריאה נכשלה, שואלים את Google אילו דגמים המפתח בכלל רשאי לראות.
   // זה מפריד בין "מפתח לא תקין" לבין "שם הדגם לא קיים עבור המפתח הזה".
