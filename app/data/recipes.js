@@ -106,7 +106,7 @@ function haystack(r) {
   );
 }
 
-export function searchRecipesDetailed(query) {
+export function searchRecipesDetailed(query, list) {
   const q = fold(query);
   if (!q) return { results: [], confident: false };
   const expanded = q
@@ -115,7 +115,7 @@ export function searchRecipesDetailed(query) {
     .join(' ');
   const terms = [...new Set(expanded.split(' ').filter((w) => w.length > 1))];
 
-  const scored = recipes
+  const scored = (list || recipes)
     .map((r) => {
       const hay = haystack(r);
       const title = fold(r.title + ' ' + r.sub);
@@ -157,8 +157,8 @@ export function searchRecipesDetailed(query) {
   };
 }
 
-export function searchRecipes(query) {
-  return searchRecipesDetailed(query).results;
+export function searchRecipes(query, list) {
+  return searchRecipesDetailed(query, list).results;
 }
 
 export function searchQueryUrls(query) {

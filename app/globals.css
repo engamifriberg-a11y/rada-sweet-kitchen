@@ -611,3 +611,279 @@ footer.foot b { font-family: var(--display); color: var(--accent); font-weight: 
   font-size: 13.5px; line-height: 1.6; color: var(--muted);
 }
 .maybe-note svg { color: var(--pink); flex: none; margin-top: 1px; }
+
+/* ─────────────────────────────────────────────
+   הספרייה האישית: עריכה, מצב מטבח, קניות, גיבוי
+   ───────────────────────────────────────────── */
+
+.iconbtn.active { background: var(--accent-soft); border-color: var(--accent-2); color: var(--accent); }
+.iconbtn { position: relative; }
+.pip {
+  position: absolute; top: -5px; inset-inline-end: -5px; min-width: 18px; height: 18px;
+  border-radius: 9px; background: var(--pink); color: #fff; font-size: 11px; font-weight: 700;
+  font-style: normal; display: grid; place-items: center; padding: 0 5px;
+}
+
+.chip.add { border-style: dashed; border-color: var(--accent-2); color: var(--accent); }
+.chip.add:hover { background: var(--accent-soft); }
+
+.sec-head .sec-cta { margin-inline-start: auto; padding: 9px 15px; font-size: 13.5px; }
+
+.rcard-flags { position: absolute; top: 10px; inset-inline-start: 10px; z-index: 2; display: flex; gap: 5px; }
+.rcard-flags .rcard-badge { position: static; }
+.rcard-badge.mine { background: linear-gradient(135deg, #2F8F5B, #1F6B43); }
+.rcard-badge.edit { background: linear-gradient(135deg, var(--honey), #8A6418); }
+.rcard-fav {
+  position: absolute; top: 10px; inset-inline-end: 10px; z-index: 2;
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--grad); color: #fff; box-shadow: var(--shadow-sm);
+}
+
+/* FAB */
+.fab {
+  position: fixed; inset-block-end: 22px; inset-inline-end: 22px; z-index: 60;
+  width: 58px; height: 58px; border-radius: 22px; border: 0;
+  background: var(--grad); color: #fff; display: grid; place-items: center;
+  box-shadow: var(--shadow-lg);
+  transition: transform .16s cubic-bezier(.2,.8,.3,1.5);
+}
+.fab:hover { transform: translateY(-3px) rotate(90deg); }
+.fab:active { transform: scale(.92); }
+
+/* ── הערה אישית ── */
+.mynote {
+  background: linear-gradient(180deg, var(--accent-soft), var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: var(--r-md); padding: 14px;
+}
+.mynote-h { display: flex; align-items: center; gap: 7px; color: var(--accent); font-size: 12.5px; font-weight: 700; margin-bottom: 9px; }
+.mynote textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 11px 13px;
+  font: inherit; font-size: 14.5px; line-height: 1.6; background: var(--surface); color: var(--ink);
+  resize: vertical; outline: none;
+}
+.mynote textarea:focus { border-color: var(--accent-2); box-shadow: var(--ring); }
+.addnote {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px; border: 1px dashed var(--line); border-radius: var(--r-md);
+  background: transparent; color: var(--faint); font-size: 13.5px; font-weight: 500;
+  transition: all .15s;
+}
+.addnote:hover { border-color: var(--accent-2); color: var(--accent); background: var(--accent-soft); }
+
+/* ── מחשבון תבניות ── */
+.panbtn {
+  width: 100%; display: flex; align-items: center; gap: 9px;
+  padding: 11px 14px; border: 1px solid var(--line); border-radius: var(--pill);
+  background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 600;
+  margin-bottom: 14px;
+}
+.panbtn:hover { border-color: var(--accent-2); color: var(--accent); }
+.panbtn-x { margin-inline-start: auto; font-size: 18px; line-height: 1; }
+.pancalc {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 15px; margin-bottom: 16px; display: grid; gap: 13px;
+}
+.panbox-t { display: block; font-size: 11.5px; font-weight: 700; color: var(--pink); margin-bottom: 7px; letter-spacing: .06em; }
+.panbox-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.panbox-row select, .dim input {
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 9px 11px;
+  font: inherit; font-size: 14px; background: var(--surface-2); color: var(--ink); outline: none;
+}
+.panbox-row select:focus, .dim input:focus { border-color: var(--accent-2); box-shadow: var(--ring); }
+.dim { display: flex; flex-direction: column; gap: 3px; }
+.dim input { width: 86px; }
+.dim span { font-size: 10.5px; color: var(--faint); padding-inline-start: 3px; }
+.panres {
+  display: flex; align-items: center; gap: 11px; flex-wrap: wrap;
+  padding-top: 13px; border-top: 1px solid var(--line);
+}
+.panres b { font-family: var(--display); font-size: 24px; color: var(--accent); }
+.panres span { font-size: 12.5px; color: var(--faint); }
+.panres .btn { margin-inline-start: auto; padding: 10px 16px; font-size: 13.5px; }
+.pannote { font-size: 11.5px; color: var(--faint); line-height: 1.55; }
+
+/* ── מצב מטבח ── */
+.kitchen-bar {
+  position: sticky; top: 59px; z-index: 4;
+  display: flex; align-items: center; gap: 9px;
+  background: var(--accent); color: #fff; padding: 10px 18px; font-size: 12.5px; font-weight: 600;
+}
+.kitchen-bar .linkbtn { margin-inline-start: auto; }
+.linkbtn { background: none; border: 0; color: inherit; text-decoration: underline; font-size: 12.5px; font-weight: 700; padding: 0; }
+
+.sheet-in.kitchen { font-size: 118%; }
+.sheet-in.kitchen .ing li { padding: 15px 16px; font-size: 17px; }
+.sheet-in.kitchen .ing-q { font-size: 17.5px; min-width: 92px; }
+.sheet-in.kitchen .steps li { font-size: 17.5px; line-height: 1.8; padding-bottom: 22px; }
+.sheet-in.kitchen .block { margin-top: 24px; }
+
+li.tickable, .steps li.tickable { cursor: pointer; }
+li.tickable:hover { background: var(--accent-soft); }
+.ing li .tick, .shop li .tick {
+  width: 24px; height: 24px; flex: none; border-radius: 8px;
+  border: 2px solid var(--line); display: grid; place-items: center;
+  color: #fff; font-size: 14px; font-weight: 700; margin-inline-end: 2px;
+}
+li.done .tick { background: var(--good); border-color: var(--good); }
+li.done { opacity: .5; }
+li.done .ing-n, li.done .shop-n { text-decoration: line-through; }
+.steps li.done { opacity: .45; text-decoration: line-through; }
+
+/* ── סרטון ── */
+.videdit { display: grid; gap: 11px; }
+.videdit input {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--r-md); padding: 13px 15px;
+  font: inherit; font-size: 15px; background: var(--surface); color: var(--ink); outline: none;
+}
+.videdit input:focus { border-color: var(--accent-2); box-shadow: var(--ring); }
+.videdit-row { display: flex; gap: 9px; flex-wrap: wrap; }
+.videdit-row .btn { flex: 1; min-width: 120px; padding: 11px 14px; font-size: 14px; }
+
+/* ── עורך המתכון ── */
+.ed { padding: 20px; }
+.ed-err {
+  display: flex; align-items: center; gap: 9px; background: var(--pink-soft);
+  border: 1px solid color-mix(in srgb, var(--pink) 34%, transparent);
+  color: var(--pink); border-radius: var(--r-md); padding: 12px 14px;
+  font-size: 13.5px; font-weight: 600; margin-bottom: 18px;
+}
+.ed-sec {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: 17px; margin-bottom: 16px;
+}
+.ed-sec > h3 { font-size: 17px; color: var(--accent); margin-bottom: 13px; }
+.ed-hint { font-size: 12.5px; color: var(--faint); margin: -7px 0 13px; line-height: 1.5; }
+.ed-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+@media (max-width: 560px) { .ed-row { grid-template-columns: 1fr; } .ed { padding: 14px; } }
+
+.fld { display: block; margin-bottom: 13px; }
+.fld-l { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+.fld-l em { font-style: normal; font-weight: 400; color: var(--faint); margin-inline-start: 6px; font-size: 11.5px; }
+.fld input, .fld select, .fld textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 11px 13px;
+  font: inherit; font-size: 15px; background: var(--surface-2); color: var(--ink);
+  outline: none; resize: vertical;
+}
+.fld input:focus, .fld select:focus, .fld textarea:focus { border-color: var(--accent-2); box-shadow: var(--ring); }
+
+.art-pick {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 9px;
+  max-height: 290px; overflow-y: auto; padding: 3px;
+}
+.art-opt {
+  border: 2px solid var(--line); border-radius: var(--r-md); background: linear-gradient(170deg, #FDF8FE, #F2E7F8);
+  padding: 2px; overflow: hidden; display: block; transition: all .15s;
+}
+.art-opt span {
+  display: block; font-size: 10.5px; color: var(--ink); background: var(--surface);
+  padding: 5px 3px; font-weight: 600;
+}
+.art-opt.on { border-color: var(--accent); box-shadow: var(--ring); }
+.art-opt.on span { background: var(--accent); color: #fff; }
+
+.ed-group { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px; margin-bottom: 12px; background: var(--surface-2); }
+.ed-group-head { display: flex; gap: 8px; margin-bottom: 10px; }
+.ed-group-name {
+  flex: 1; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 9px 12px;
+  font: inherit; font-size: 13.5px; font-weight: 700; background: var(--surface); color: var(--ink); outline: none;
+}
+.ing-edit { display: grid; grid-template-columns: 74px 84px 1fr 1fr 34px; gap: 7px; margin-bottom: 7px; }
+.ing-edit input, .ing-edit select {
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 9px 10px;
+  font: inherit; font-size: 14px; background: var(--surface); color: var(--ink); outline: none; min-width: 0;
+}
+.ing-edit input:focus, .ing-edit select:focus { border-color: var(--accent-2); }
+@media (max-width: 620px) {
+  .ing-edit { grid-template-columns: 70px 76px 1fr 34px; }
+  .ing-edit .nt { grid-column: 1 / -1; }
+}
+
+.line-edit { display: grid; grid-template-columns: 30px 1fr 34px; gap: 8px; margin-bottom: 8px; align-items: start; }
+.line-num {
+  width: 30px; height: 30px; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
+  display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 14px; margin-top: 3px;
+}
+.line-edit textarea {
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px;
+  font: inherit; font-size: 14.5px; line-height: 1.55; background: var(--surface); color: var(--ink);
+  outline: none; resize: vertical; width: 100%;
+}
+.line-edit textarea:focus { border-color: var(--accent-2); }
+
+.fix-edit { display: grid; grid-template-columns: 1fr 1fr 1fr 34px; gap: 7px; margin-bottom: 8px; }
+.fix-edit input {
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 9px 11px;
+  font: inherit; font-size: 13.5px; background: var(--surface); color: var(--ink); outline: none; min-width: 0;
+}
+@media (max-width: 620px) { .fix-edit { grid-template-columns: 1fr 34px; } .fix-edit input:nth-child(2), .fix-edit input:nth-child(3) { grid-column: 1 / 2; } }
+
+.rowdel {
+  width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--faint); display: grid; place-items: center; flex: none;
+}
+.rowdel:hover { border-color: var(--pink); color: var(--pink); background: var(--pink-soft); }
+.addrow {
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px;
+  border: 1px dashed var(--line); border-radius: var(--pill); background: transparent;
+  color: var(--accent); font-size: 13px; font-weight: 600;
+}
+.addrow:hover { border-color: var(--accent-2); background: var(--accent-soft); }
+.addrow.wide { width: 100%; justify-content: center; }
+
+.ed-foot { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.ed-foot .btn { flex: 1; min-width: 140px; }
+.btn-danger { background: var(--pink-soft); color: var(--pink); border-color: color-mix(in srgb, var(--pink) 34%, transparent); }
+.btn-danger:hover { background: var(--pink); color: #fff; }
+
+/* ── רשימת קניות ── */
+.cart-recipes { display: grid; gap: 8px; }
+.cart-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 12px;
+}
+.cart-chip-main { flex: 1; text-align: right; background: none; border: 0; padding: 0; min-width: 0; }
+.cart-chip-main b { display: block; font-family: var(--display); font-size: 15px; }
+.cart-chip-main span { font-size: 12px; color: var(--faint); }
+
+.shop { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.shop li {
+  display: flex; align-items: center; gap: 11px; padding: 13px 15px;
+  border-bottom: 1px solid var(--line-soft); font-size: 15px; cursor: pointer;
+}
+.shop li:last-child { border-bottom: 0; }
+.shop li:hover { background: var(--surface-2); }
+.shop-q { font-family: var(--display); font-weight: 700; color: var(--accent); min-width: 86px; font-variant-numeric: tabular-nums; }
+.shop-n { flex: 1; min-width: 0; }
+.shop-from { display: block; font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+
+/* ── גיבוי ── */
+.mystats { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 9px; }
+.mystats > div {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 13px 10px; text-align: center;
+}
+.mystats b { display: block; font-family: var(--display); font-size: 25px; color: var(--accent); line-height: 1.1; }
+.mystats span { font-size: 11.5px; color: var(--faint); }
+.backup-note {
+  display: flex; gap: 11px; align-items: flex-start; margin-top: 18px;
+  background: var(--honey-soft); border: 1px solid color-mix(in srgb, var(--honey) 30%, transparent);
+  border-radius: var(--r-md); padding: 14px; font-size: 13.5px; line-height: 1.65; color: var(--muted);
+}
+.backup-note svg { color: var(--honey); flex: none; margin-top: 1px; }
+.importmsg {
+  display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 13.5px;
+  color: var(--pink); font-weight: 600;
+}
+.importmsg.ok { color: var(--good); }
+.hidden-list { display: grid; gap: 7px; }
+.hidden-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 11px 14px; font-size: 14px;
+}
+.hidden-row .linkbtn { color: var(--accent); }
+
+@media print {
+  .fab, .kitchen-bar, .panbtn, .pancalc, .mynote, .addnote, .videdit { display: none !important; }
+}

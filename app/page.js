@@ -3,29 +3,26 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import PastryArt from './components/PastryArt';
 import Icon, { KIND_ICON } from './components/Icon';
-import {
-  recipes,
-  SECTIONS,
-  getRecipe,
-  searchRecipesDetailed,
-  searchQueryUrls,
-  scaleQty,
-  videoUrl,
-} from './data/recipes';
+import RecipeSheet from './components/RecipeSheet';
+import RecipeEditor from './components/RecipeEditor';
+import ShoppingList from './components/ShoppingList';
+import BackupPanel from './components/BackupPanel';
+import { SECTIONS, searchRecipesDetailed, searchQueryUrls } from './data/recipes';
+import { useLibrary } from './lib/library';
 
 const FILTERS = [
   { label: 'הכול', icon: 'grid' },
+  { label: 'המועדפים שלי', icon: 'bookmark' },
+  { label: 'המתכונים שלי', icon: 'dough' },
   { label: 'יסודות', icon: 'layers' },
   { label: 'עוגות', icon: 'cake' },
   { label: 'פטיסרי', icon: 'patisserie' },
-  { label: 'בצקים וקרמים', icon: 'cream' },
 ];
 
 const FILTER_MAP = {
   יסודות: ['ספוג', 'קרם', 'מרנג', 'בצק', 'בסיס', 'ציפוי'],
   עוגות: ['עוגה'],
   פטיסרי: ['פטיסרי', 'מאפה שמרים'],
-  'בצקים וקרמים': ['בצק', 'קרם', 'ציפוי'],
 };
 
 const SECTION_ICON = {
@@ -48,11 +45,20 @@ function Dots({ n }) {
   );
 }
 
-function RecipeCard({ r, onOpen }) {
+function RecipeCard({ r, onOpen, fav }) {
   return (
     <button className="rcard" onClick={() => onOpen(r.id)}>
       <div className="rcard-art">
-        {r.essential && <span className="rcard-badge">בשליפה</span>}
+        <div className="rcard-flags">
+          {r.mine && <span className="rcard-badge mine">שלי</span>}
+          {r.edited && <span className="rcard-badge edit">ערוך</span>}
+          {r.essential && !r.mine && <span className="rcard-badge">בשליפה</span>}
+        </div>
+        {fav && (
+          <span className="rcard-fav" aria-label="במועדפים">
+            <Icon name="bookmark" size={15} />
+          </span>
+        )}
         <PastryArt name={r.art} />
       </div>
       <div className="rcard-body">
@@ -61,8 +67,8 @@ function RecipeCard({ r, onOpen }) {
           <span>{r.kind}</span>
         </div>
         <h3>{r.title}</h3>
-        <div className="rcard-sub">{r.sub}</div>
-        <p className="rcard-blurb">{r.blurb}</p>
+        {(r.sub || r.origin) && <div className="rcard-sub">{r.sub || r.origin}</div>}
+        {r.blurb && <p className="rcard-blurb">{r.blurb}</p>}
         <div className="rcard-foot">
           <span>{r.yield}</span>
           <Dots n={r.difficulty} />
@@ -72,224 +78,8 @@ function RecipeCard({ r, onOpen }) {
   );
 }
 
-function Sheet({ id, onClose }) {
-  const r = getRecipe(id);
-  const [servings, setServings] = useState(r?.baseServings || 8);
-
-  useEffect(() => {
-    setServings(getRecipe(id)?.baseServings || 8);
-  }, [id]);
-
-  useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose();
-    document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
-    };
-  }, [onClose]);
-
-  if (!r) return null;
-  const factor = servings / r.baseServings;
-  const scaled = Math.abs(factor - 1) > 0.001;
-
-  const specs = [
-    { icon: 'scale', label: 'תפוקה', value: r.yield },
-    { icon: 'thermometer', label: 'תנור', value: r.oven },
-    { icon: 'clock', label: 'הכנה', value: r.times.prep },
-    { icon: 'clock', label: 'אפייה', value: r.times.bake },
-    { icon: 'clock', label: 'המתנה', value: r.times.rest },
-  ];
-
-  return (
-    <div className="sheet" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="sheet-in">
-        <div className="sheet-bar">
-          <button className="iconbtn" onClick={onClose} aria-label="סגירה">
-            <Icon name="close" />
-          </button>
-          <b>{r.title}</b>
-          <button className="iconbtn" onClick={() => window.print()} aria-label="הדפסה">
-            <Icon name="print" />
-          </button>
-        </div>
-
-        <div className="rhead">
-          <div className="rhead-art">
-            <PastryArt name={r.art} />
-            <div className="rhead-cap">חתך התוצאה הסופית · איור מקורי לפי סדר השכבות במתכון</div>
-          </div>
-        </div>
-
-        <div className="rtitle">
-          <h2>{r.title}</h2>
-          <div className="fr">{r.sub}</div>
-          <p>{r.blurb}</p>
-        </div>
-
-        <div className="specs">
-          {specs.map((s) => (
-            <div className="spec" key={s.label}>
-              <div className="sh">
-                <Icon name={s.icon} size={15} />
-                <span>{s.label}</span>
-              </div>
-              <b>{s.value}</b>
-            </div>
-          ))}
-        </div>
-
-        <section className="block">
-          <div className="block-h">
-            <span className="bh-icon">
-              <Icon name="list" />
-            </span>
-            <h3>מרכיבים</h3>
-            <span className="k">הכול בגרמים</span>
-          </div>
-
-          <div className="scaler">
-            <span>כמות מנות</span>
-            {scaled && <span className="mult">×{factor.toFixed(2).replace(/\.?0+$/, '')}</span>}
-            <div className="scaler-ctl">
-              <button onClick={() => setServings((s) => Math.max(1, s - 1))} aria-label="פחות">
-                <Icon name="minus" size={18} />
-              </button>
-              <b>{servings}</b>
-              <button onClick={() => setServings((s) => Math.min(200, s + 1))} aria-label="יותר">
-                <Icon name="plus" size={18} />
-              </button>
-            </div>
-          </div>
-
-          {r.groups.map((g) => (
-            <div className="ing-group" key={g.name}>
-              <h4>{g.name}</h4>
-              <ul className="ing">
-                {g.items.map((it) => (
-                  <li key={it.n}>
-                    <span className="ing-q">
-                      {scaleQty(it.q, factor)} {it.u}
-                    </span>
-                    <span className="ing-n">
-                      {it.n}
-                      {it.note && <span className="ing-note">{it.note}</span>}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </section>
-
-        <section className="block">
-          <div className="block-h">
-            <span className="bh-icon">
-              <Icon name="dough" />
-            </span>
-            <h3>שלבי העבודה</h3>
-          </div>
-          <ol className="steps">
-            {r.steps.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ol>
-        </section>
-
-        {r.notes?.length > 0 && (
-          <section className="block">
-            <div className="block-h">
-              <span className="bh-icon">
-                <Icon name="spark" />
-              </span>
-              <h3>הערות מקצועיות</h3>
-            </div>
-            <ul className="notes">
-              {r.notes.map((n, i) => (
-                <li key={i}>
-                  <Icon name="spark" size={17} className="ni" />
-                  <span>{n}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {r.fixes?.length > 0 && (
-          <section className="block">
-            <div className="block-h">
-              <span className="bh-icon">
-                <Icon name="alert" />
-              </span>
-              <h3>מה השתבש</h3>
-              <span className="k">אבחון מהיר</span>
-            </div>
-            <div className="fix">
-              {r.fixes.map((f, i) => (
-                <div className="fix-row" key={i}>
-                  <div className="fix-p">
-                    <Icon name="alert" size={17} className="fi" />
-                    {f.p}
-                  </div>
-                  <div className="fix-c">הסיבה: {f.c}</div>
-                  <div className="fix-f">
-                    <b>תיקון:</b> {f.f}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {r.allergens?.length > 0 && (
-          <section className="block">
-            <div className="block-h">
-              <span className="bh-icon">
-                <Icon name="leaf" />
-              </span>
-              <h3>אלרגנים</h3>
-            </div>
-            <div className="tags">
-              {r.allergens.map((a) => (
-                <span className="tag" key={a}>
-                  <Icon name="leaf" size={14} />
-                  {a}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <div className="cta-row">
-          <a className="btn btn-video" href={videoUrl(r)} target="_blank" rel="noopener noreferrer">
-            <Icon name="play" size={18} />
-            סרטון הדרכה להכנה
-          </a>
-          <a
-            className="btn btn-ghost"
-            href={'https://www.google.com/search?q=' + encodeURIComponent(r.title + ' ' + r.sub + ' מתכון')}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Icon name="search" size={18} />
-            חיפוש באינטרנט
-          </a>
-          <button className="btn btn-ghost" onClick={() => window.print()}>
-            <Icon name="print" size={18} />
-            הדפסה
-          </button>
-        </div>
-
-        <div className="sheet-end" />
-      </div>
-    </div>
-  );
-}
-
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
-
   useEffect(() => {
     let saved = null;
     try {
@@ -300,7 +90,6 @@ function ThemeToggle() {
     setDark(isDark);
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }, []);
-
   function toggle() {
     const next = !dark;
     setDark(next);
@@ -309,7 +98,6 @@ function ThemeToggle() {
       localStorage.setItem('rada-theme', next ? 'dark' : 'light');
     } catch {}
   }
-
   return (
     <button className="iconbtn" onClick={toggle} aria-label={dark ? 'מצב בהיר' : 'מצב כהה'}>
       <Icon name={dark ? 'sun' : 'moon'} size={19} />
@@ -318,7 +106,11 @@ function ThemeToggle() {
 }
 
 export default function Home() {
+  const lib = useLibrary();
+
   const [open, setOpen] = useState(null);
+  const [editing, setEditing] = useState(null); // recipe | 'new' | null
+  const [panel, setPanel] = useState(null); // 'cart' | 'backup' | null
   const [q, setQ] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [filter, setFilter] = useState('הכול');
@@ -335,7 +127,6 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
-  // מצב החיבור מגיע מהשרת; הניתוק הוא העדפה של המשתמשת ונשמר בדפדפן
   useEffect(() => {
     try {
       const saved = localStorage.getItem('rada-ai');
@@ -359,14 +150,20 @@ export default function Home() {
     } catch {}
   }
 
-  const essentials = useMemo(() => recipes.filter((r) => r.essential), []);
+  const all = lib.library;
+  const byId = useCallback((id) => all.find((r) => r.id === id) || null, [all]);
+
+  // החיפוש רץ על הספרייה המלאה, כולל המתכונים שרדה כתבה
   const found = useMemo(
-    () => (submitted ? searchRecipesDetailed(submitted) : null),
-    [submitted]
+    () => (submitted ? searchRecipesDetailed(submitted, all) : null),
+    [submitted, all]
   );
   const results = found?.results || [];
   const confident = !!found?.confident;
   const links = useMemo(() => searchQueryUrls(submitted), [submitted]);
+
+  const essentials = useMemo(() => all.filter((r) => r.essential && !r.mine), [all]);
+  const myRecipes = useMemo(() => all.filter((r) => r.mine), [all]);
   const open_ = useCallback((id) => setOpen(id), []);
 
   async function runSearch(e) {
@@ -401,11 +198,29 @@ export default function Home() {
     setAiErr(null);
   }
 
-  const visible = (list) => {
-    if (filter === 'הכול') return list;
-    const kinds = FILTER_MAP[filter] || [];
-    return list.filter((r) => kinds.includes(r.kind));
-  };
+  const visible = useCallback(
+    (list) => {
+      if (filter === 'הכול') return list;
+      if (filter === 'המועדפים שלי') return list.filter((r) => lib.data.favorites.includes(r.id));
+      if (filter === 'המתכונים שלי') return list.filter((r) => r.mine || r.edited);
+      const kinds = FILTER_MAP[filter] || [];
+      return list.filter((r) => kinds.includes(r.kind));
+    },
+    [filter, lib.data.favorites]
+  );
+
+  const favCount = lib.data.favorites.length;
+  const cartCount = lib.data.cart.length;
+  const openRecipe = open ? byId(open) : null;
+
+  const sectionLists = SECTIONS.map((sec) => ({
+    sec,
+    list: visible(sec.ids.map(byId).filter(Boolean)),
+  }));
+  const nothingVisible =
+    filter !== 'הכול' &&
+    sectionLists.every((s) => s.list.length === 0) &&
+    visible(myRecipes).length === 0;
 
   return (
     <>
@@ -432,6 +247,17 @@ export default function Home() {
                 }).format(now)
               : ''}
           </div>
+          <button
+            className={'iconbtn' + (cartCount ? ' active' : '')}
+            onClick={() => setPanel('cart')}
+            aria-label="רשימת קניות"
+          >
+            <Icon name="list" size={19} />
+            {cartCount > 0 && <i className="pip">{cartCount}</i>}
+          </button>
+          <button className="iconbtn" onClick={() => setPanel('backup')} aria-label="העבודה שלי">
+            <Icon name="bookmark" size={19} />
+          </button>
           <ThemeToggle />
         </div>
       </div>
@@ -446,21 +272,21 @@ export default function Home() {
             המטבח המתוק של <em>ראדה</em>
           </h1>
           <p className="hero-lead">
-            מתכונים במשקל, טמפרטורות מדויקות, זמנים, אבחון תקלות וסרטוני הדרכה. מהיסודות שחייבים להיות
-            בשליפה ועד עוגות החתימה.
+            מתכונים במשקל, טמפרטורות, אבחון תקלות וסרטונים — ומקום לכתוב את המתכונים שלך, לתקן מה
+            שלא מדויק ולסמן את מה שאת מכינה באמת.
           </p>
           <div className="hero-stats">
             <div className="stat">
-              <b>{recipes.length}</b>
+              <b>{all.length}</b>
               <span>מתכונים</span>
             </div>
             <div className="stat">
-              <b>{essentials.length}</b>
-              <span>בשליפה</span>
+              <b>{myRecipes.length}</b>
+              <span>שלי</span>
             </div>
             <div className="stat">
-              <b>100%</b>
-              <span>בגרמים</span>
+              <b>{favCount}</b>
+              <span>מועדפים</span>
             </div>
           </div>
         </header>
@@ -481,6 +307,7 @@ export default function Home() {
               {busy ? 'מחפשת…' : 'חיפוש'}
             </button>
           </div>
+
           <div className="chips">
             {FILTERS.map((f) => (
               <button
@@ -499,6 +326,10 @@ export default function Home() {
                 ניקוי
               </button>
             )}
+            <button type="button" className="chip add" onClick={() => setEditing('new')}>
+              <Icon name="plus" size={15} />
+              מתכון חדש
+            </button>
           </div>
 
           {aiConfigured !== null && (
@@ -508,7 +339,7 @@ export default function Home() {
                 {!aiConfigured
                   ? 'יצירת מתכונים לא מחוברת'
                   : aiOn
-                    ? 'יצירת מתכונים פעילה — כל בקשה שאינה במאגר תיווצר מחדש'
+                    ? 'יצירת מתכונים פעילה — בקשה שאינה במאגר תיווצר מחדש'
                     : 'יצירת מתכונים מנותקת — מחפשת רק במאגר'}
               </span>
               {aiConfigured && (
@@ -539,13 +370,12 @@ export default function Home() {
                   {busy
                     ? 'מחפשת…'
                     : confident
-                      ? `${results.length} מתכונים תואמים במאגר`
+                      ? `${results.length} מתכונים תואמים`
                       : 'אין התאמה מדויקת במאגר'}
                 </p>
               </div>
             </div>
 
-            {/* תמיד זמין — גם כשהמאגר לא מזהה את הבקשה וגם כשהוא טועה */}
             <div className="online-row">
               <a className="btn btn-video" href={links.video} target="_blank" rel="noopener noreferrer">
                 <Icon name="play" size={18} />
@@ -555,6 +385,10 @@ export default function Home() {
                 <Icon name="search" size={18} />
                 חיפוש באינטרנט
               </a>
+              <button className="btn btn-ghost" onClick={() => setEditing('new')}>
+                <Icon name="plus" size={18} />
+                לכתוב בעצמי
+              </button>
             </div>
 
             {busy && (
@@ -598,8 +432,7 @@ export default function Home() {
                     <b>לא נמצא במאגר.</b>{' '}
                     {aiConfigured
                       ? 'יצירת המתכונים מנותקת — אפשר לחבר אותה במתג שמעל.'
-                      : 'יצירת מתכונים חדשים אינה מחוברת כרגע.'}{' '}
-                    הכפתורים שלמעלה יחפשו סרטון או מתכון באינטרנט.
+                      : 'יצירת מתכונים חדשים אינה מחוברת כרגע.'}
                   </span>
                 )}
               </div>
@@ -618,7 +451,7 @@ export default function Home() {
                 )}
                 <div className="grid">
                   {(confident ? results : results.slice(0, 6)).map((r) => (
-                    <RecipeCard key={r.id} r={r} onOpen={open_} />
+                    <RecipeCard key={r.id} r={r} onOpen={open_} fav={lib.data.favorites.includes(r.id)} />
                   ))}
                 </div>
               </>
@@ -628,37 +461,60 @@ export default function Home() {
 
         {!submitted && (
           <>
-            <div className="band">
-              <div className="band-top">
-                <span className="band-icon">
-                  <Icon name="bookmark" size={21} />
-                </span>
-                <h2>בשליפה</h2>
-                <span className="band-tag">{essentials.length} מתכונים</span>
-              </div>
-              <p>
-                אלה המתכונים שכל עוגה נשענת עליהם. מי שיודע אותם בעל פה מרכיב כל עוגה בלי מתכון — רק
-                מחליף יחסים וטעמים.
-              </p>
-              <div className="band-grid">
-                {essentials.map((r) => (
-                  <button key={r.id} className="band-item" onClick={() => open_(r.id)}>
-                    <span className="bi">
-                      <Icon name={KIND_ICON[r.kind] || 'spark'} size={17} />
-                    </span>
-                    <span>
-                      <b>{r.title}</b>
-                      <span>{r.kind}</span>
-                    </span>
+            {visible(myRecipes).length > 0 && (
+              <section className="sec">
+                <div className="sec-head">
+                  <span className="sec-icon">
+                    <Icon name="dough" />
+                  </span>
+                  <div>
+                    <h2>המתכונים שלי</h2>
+                    <p className="sec-note">מה שכתבת בעצמך</p>
+                  </div>
+                  <button className="btn btn-ghost sec-cta" onClick={() => setEditing('new')}>
+                    <Icon name="plus" size={17} />
+                    חדש
                   </button>
-                ))}
-              </div>
-            </div>
+                </div>
+                <div className="grid">
+                  {visible(myRecipes).map((r) => (
+                    <RecipeCard key={r.id} r={r} onOpen={open_} fav={lib.data.favorites.includes(r.id)} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-            {SECTIONS.map((sec) => {
-              const list = visible(sec.ids.map(getRecipe).filter(Boolean));
-              if (!list.length) return null;
-              return (
+            {filter === 'הכול' && essentials.length > 0 && (
+              <div className="band">
+                <div className="band-top">
+                  <span className="band-icon">
+                    <Icon name="bookmark" size={21} />
+                  </span>
+                  <h2>בשליפה</h2>
+                  <span className="band-tag">{essentials.length} מתכונים</span>
+                </div>
+                <p>
+                  אלה המתכונים שכל עוגה נשענת עליהם. מי שיודע אותם בעל פה מרכיב כל עוגה בלי מתכון —
+                  רק מחליף יחסים וטעמים.
+                </p>
+                <div className="band-grid">
+                  {essentials.map((r) => (
+                    <button key={r.id} className="band-item" onClick={() => open_(r.id)}>
+                      <span className="bi">
+                        <Icon name={KIND_ICON[r.kind] || 'spark'} size={17} />
+                      </span>
+                      <span>
+                        <b>{r.title}</b>
+                        <span>{r.kind}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {sectionLists.map(({ sec, list }) =>
+              list.length === 0 ? null : (
                 <section className="sec" key={sec.id}>
                   <div className="sec-head">
                     <span className="sec-icon">
@@ -671,12 +527,19 @@ export default function Home() {
                   </div>
                   <div className="grid">
                     {list.map((r) => (
-                      <RecipeCard key={r.id} r={r} onOpen={open_} />
+                      <RecipeCard key={r.id} r={r} onOpen={open_} fav={lib.data.favorites.includes(r.id)} />
                     ))}
                   </div>
                 </section>
-              );
-            })}
+              )
+            )}
+
+            {nothingVisible && (
+              <p className="results-note" style={{ marginTop: 30 }}>
+                <Icon name="bookmark" size={19} className="ri" />
+                <span>אין כאן עדיין כלום. פתחי מתכון וסמני אותו כמועדף, או כתבי מתכון משלך.</span>
+              </p>
+            )}
           </>
         )}
 
@@ -686,7 +549,55 @@ export default function Home() {
         </footer>
       </main>
 
-      {open && <Sheet id={open} onClose={() => setOpen(null)} />}
+      <button className="fab" onClick={() => setEditing('new')} aria-label="מתכון חדש">
+        <Icon name="plus" size={24} />
+      </button>
+
+      {openRecipe && (
+        <RecipeSheet
+          recipe={openRecipe}
+          lib={lib}
+          onClose={() => setOpen(null)}
+          onEdit={(r) => {
+            setOpen(null);
+            setEditing(r);
+          }}
+        />
+      )}
+
+      {editing && (
+        <RecipeEditor
+          initial={editing === 'new' ? null : editing}
+          onCancel={() => setEditing(null)}
+          onSave={(r) => {
+            lib.saveRecipe(r);
+            setEditing(null);
+            setOpen(r.id);
+          }}
+          onDelete={
+            editing === 'new'
+              ? null
+              : () => {
+                  lib.removeRecipe(editing.id);
+                  setEditing(null);
+                  setOpen(null);
+                }
+          }
+        />
+      )}
+
+      {panel === 'cart' && (
+        <ShoppingList
+          lib={lib}
+          onClose={() => setPanel(null)}
+          onOpenRecipe={(id) => {
+            setPanel(null);
+            setOpen(id);
+          }}
+        />
+      )}
+
+      {panel === 'backup' && <BackupPanel lib={lib} onClose={() => setPanel(null)} />}
     </>
   );
 }
