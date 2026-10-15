@@ -1,11 +1,19 @@
 import './globals.css';
+import InstallPrompt from './components/InstallPrompt';
 
 export const metadata = {
   title: 'המטבח המתוק של ראדה',
   description:
     'כלי עבודה לקונדיטורית: מתכוני יסוד ועוגות חתימה בעברית, כמויות במשקל, טמפרטורות, פתרון תקלות וסרטוני הדרכה.',
   manifest: '/manifest.webmanifest',
-  icons: { icon: '/cake-icon.svg', apple: '/cake-icon.svg' },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/cake-icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/icons/icon-192.png', sizes: '192x192' }],
+  },
   appleWebApp: { capable: true, title: 'המטבח של ראדה', statusBarStyle: 'default' },
 };
 
@@ -34,7 +42,10 @@ export default function RootLayout({ children }) {
         />
         <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <InstallPrompt />
+      </body>
     </html>
   );
 }
