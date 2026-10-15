@@ -162,11 +162,40 @@ export async function GET(request) {
   }
 
   const r = await callGemini({ prompt: 'כתבי את המילה: תקין', maxTokens: 16, timeoutMs: 10000 });
+
+  // אם הקריאה נכשלה, שואלים את Google אילו דגמים המפתח בכלל רשאי לראות.
+  // זה מפריד בין "מפתח לא תקין" לבין "שם הדגם לא קיים עבור המפתח הזה".
+  let models = null;
+  let modelsStatus = null;
+  if (!r.text) {
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+        headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY },
+      });
+      modelsStatus = res.status;
+      if (res.ok) {
+        const d = await res.json();
+        models = (d.models || [])
+          .map((m) => String(m.name || '').replace('models/', ''))
+          .filter((n) => n.includes('flash') || n.includes('pro'))
+          .slice(0, 12);
+      }
+    } catch {
+      modelsStatus = 'network_error';
+    }
+  }
+
   return Response.json({
     ...base,
     probe: r.text ? 'ok' : r.error,
-    // קוד הסטטוס של Google, לאבחון. אין בו שום חלק מהמפתח.
+    // קודי סטטוס של Google לאבחון בלבד. אין בהם שום חלק מהמפתח.
     providerStatus: r.status || null,
-    message: r.text ? 'המפתח תקין והיצירה פעילה.' : MESSAGES[r.error] || MESSAGES.provider_error,
+    modelsStatus,
+    availableModels: models,
+    message: r.text
+      ? 'המפתח תקין והיצירה פעילה.'
+      : modelsStatus === 200
+        ? 'המפתח תקין, אבל שם הדגם שהוגדר אינו זמין לו. יש לבחור דגם מהרשימה.'
+        : MESSAGES[r.error] || MESSAGES.provider_error,
   });
 }
