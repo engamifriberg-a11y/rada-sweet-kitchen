@@ -29,8 +29,8 @@ const C = {
   crust: '#B8793C',
   crustDark: '#8A5425',
   burnt: '#6E3A1C',
-  plate: '#E6DED1',
-  line: '#5A4535',
+  plate: '#EBDCE3',
+  line: '#5E3B50',
 };
 
 function Defs() {
@@ -71,7 +71,7 @@ function Plate({ w = 300, y = 214 }) {
     <g>
       <ellipse cx="200" cy={y + 4} rx={w / 2} ry="12" fill="#000" opacity=".10" filter="url(#pa-soft)" />
       <ellipse cx="200" cy={y} rx={w / 2} ry="10" fill={C.plate} />
-      <ellipse cx="200" cy={y - 1.5} rx={w / 2 - 8} ry="7" fill="#F3EDE3" />
+      <ellipse cx="200" cy={y - 1.5} rx={w / 2 - 8} ry="7" fill="#F8EEF3" />
     </g>
   );
 }
@@ -111,8 +111,8 @@ function Bowl({ fill, tex, swirl = true, label }) {
   return (
     <g>
       <ellipse cx="200" cy="200" rx="128" ry="22" fill="#000" opacity=".08" filter="url(#pa-soft)" />
-      <path d="M78 118 Q78 196 200 196 Q322 196 322 118 Z" fill="#EFE8DC" />
-      <path d="M84 120 Q84 189 200 189 Q316 189 316 120 Z" fill="#F7F2E8" />
+      <path d="M78 118 Q78 196 200 196 Q322 196 322 118 Z" fill="#EFE2E9" />
+      <path d="M84 120 Q84 189 200 189 Q316 189 316 120 Z" fill="#FBF3F7" />
       <ellipse cx="200" cy="118" rx="122" ry="26" fill={fill} />
       {tex && <ellipse cx="200" cy="118" rx="122" ry="26" fill={`url(#${tex})`} />}
       <ellipse cx="200" cy="114" rx="122" ry="26" fill="url(#pa-glass)" opacity=".5" />
@@ -256,7 +256,7 @@ const ART = {
         }
       />
       <g opacity=".9">
-        <rect x="286" y="52" width="86" height="54" rx="8" fill="#F7F2E8" stroke="#D9CBB4" />
+        <rect x="286" y="52" width="86" height="54" rx="8" fill="#FBF3F7" stroke="#E3CEDA" />
         <text x="329" y="72" textAnchor="middle" fontSize="13" fill={C.line} fontFamily="inherit">1:1</text>
         <text x="329" y="90" textAnchor="middle" fontSize="11" fill={C.line} opacity=".7" fontFamily="inherit">ציפוי</text>
       </g>
@@ -577,7 +577,7 @@ const ART = {
       <g>
         <ellipse cx="200" cy="168" rx="124" ry="44" fill="#E3B678" />
         <ellipse cx="200" cy="168" rx="124" ry="44" fill="url(#pa-crumb)" opacity=".35" />
-        <ellipse cx="200" cy="162" rx="58" ry="18" fill="#F3EDE3" />
+        <ellipse cx="200" cy="162" rx="58" ry="18" fill="#F8EEF3" />
         <path d="M78 156 q30 -30 122 -30 q92 0 122 30 q-30 -44 -122 -44 q-92 0 -122 44 Z" fill="#EFC489" />
         <g>
           {[...Array(11)].map((_, i) => (

@@ -4,8 +4,8 @@
   "description": "כלי עבודה לקונדיטורית: מתכוני יסוד ועוגות חתימה בעברית",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F4EEE4",
-  "theme_color": "#2B211A",
+  "background_color": "#FAF1F3",
+  "theme_color": "#6E2448",
   "lang": "he",
   "dir": "rtl",
   "icons": [

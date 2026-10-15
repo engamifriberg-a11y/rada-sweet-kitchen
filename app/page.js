@@ -290,11 +290,11 @@ export default function Home() {
         <div className="topbar-in">
           <div className="brand">
             <div className="brand-mark">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M3 20h18v-5c0-3-4-5-9-5s-9 2-9 5v5Z" fill="#F0D9A8" />
-                <path d="M3 17h18" stroke="#A8762F" strokeWidth="1.4" />
-                <path d="M12 9V5" stroke="#F0D9A8" strokeWidth="1.6" strokeLinecap="round" />
-                <circle cx="12" cy="4" r="1.6" fill="#D9A05A" />
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3.5 20h17v-4.6c0-2.9-3.8-4.9-8.5-4.9s-8.5 2-8.5 4.9V20Z" fill="#F3D9E4" />
+                <path d="M3.5 16.2c1.6 1.2 2.9-1 4.3 0 1.4 1 2.8-1.1 4.2 0 1.4 1.1 2.8-1 4.2 0 1.4 1 2.6-1.1 4.3 0" stroke="#E0C183" strokeWidth="1.1" fill="none" strokeLinecap="round" />
+                <path d="M12 9.6V5.6" stroke="#E3A8C0" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="12" cy="4.3" r="1.7" fill="#E0C183" />
               </svg>
             </div>
             <div>
@@ -342,6 +342,7 @@ export default function Home() {
               <span>בגרמים</span>
             </div>
           </div>
+          <div className="piping" aria-hidden="true" />
         </header>
 
         <form className="search-shell" onSubmit={runSearch}>
@@ -383,7 +384,7 @@ export default function Home() {
               <span className="sec-num">?</span>
               <h2>תוצאות עבור “{submitted}”</h2>
             </div>
-            <div className="sec-rule" />
+            <div className="ornament"><i /></div>
             {results.length > 0 ? (
               <div className="grid">
                 {results.map((r) => (
@@ -438,7 +439,7 @@ export default function Home() {
                       <p className="sec-note">{sec.note}</p>
                     </div>
                   </div>
-                  <div className="sec-rule" />
+                  <div className="ornament"><i /></div>
                   <div className="grid">
                     {list.map((r) => (
                       <RecipeCard key={r.id} r={r} onOpen={open_} />
