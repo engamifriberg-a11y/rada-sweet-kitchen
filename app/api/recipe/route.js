@@ -61,7 +61,7 @@ const SYSTEM =
   'שלבים ממוספרים, אלרגנים, ושתי הערות מקצועיות. בלי הקדמות ובלי סיכומים.';
 
 /** קריאה אחת ל־Gemini. מחזירה { text } או { error } — לעולם לא את המפתח. */
-async function callGemini({ prompt, maxTokens = 4000, timeoutMs = 25000, retried = false }) {
+async function callGemini({ prompt, maxTokens = 4000, timeoutMs = 25000, retried = false, requireHebrew = true }) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { error: 'not_configured' };
 
@@ -98,7 +98,7 @@ async function callGemini({ prompt, maxTokens = 4000, timeoutMs = 25000, retried
         resolvedModel = found;
         console.error('Gemini model unavailable, switched to', found);
         clearTimeout(timer);
-        return callGemini({ prompt, maxTokens, timeoutMs, retried: true });
+        return callGemini({ prompt, maxTokens, timeoutMs, retried: true, requireHebrew });
       }
     }
 
@@ -131,7 +131,7 @@ async function callGemini({ prompt, maxTokens = 4000, timeoutMs = 25000, retried
       const reason = cand?.finishReason || data.promptFeedback?.blockReason || null;
       return { error: reason === 'MAX_TOKENS' ? 'truncated' : 'empty_response', detail: reason };
     }
-    if (!/[א-ת]/.test(text)) return { error: 'not_hebrew' };
+    if (requireHebrew && !/[א-ת]/.test(text)) return { error: 'not_hebrew' };
     return { text };
   } catch (e) {
     return { error: e?.name === 'AbortError' ? 'timeout' : 'network_error' };
@@ -228,7 +228,13 @@ export async function GET(request) {
     return Response.json({ ...base, probe: 'not_configured', message: MESSAGES.not_configured });
   }
 
-  const r = await callGemini({ prompt: 'כתבי את המילה: תקין', maxTokens: 256, timeoutMs: 15000 });
+  // הבדיקה מוודאת שהשירות משיב, לא שהוא משיב בעברית — על עברית אחראי המתכון עצמו.
+  const r = await callGemini({
+    prompt: 'עני במילה אחת: תקין',
+    maxTokens: 256,
+    timeoutMs: 15000,
+    requireHebrew: false,
+  });
 
   // אם הקריאה נכשלה, שואלים את Google אילו דגמים המפתח בכלל רשאי לראות.
   // זה מפריד בין "מפתח לא תקין" לבין "שם הדגם לא קיים עבור המפתח הזה".
@@ -263,8 +269,8 @@ export async function GET(request) {
     availableModels: models,
     message: r.text
       ? 'המפתח תקין והיצירה פעילה.'
-      : modelsStatus === 200
-        ? 'המפתח תקין, אבל שם הדגם שהוגדר אינו זמין לו. יש לבחור דגם מהרשימה.'
+      : r.status === 404 && modelsStatus === 200
+        ? 'המפתח תקין, אבל הדגם שהוגדר אינו זמין לו. יש לבחור דגם מהרשימה.'
         : MESSAGES[r.error] || MESSAGES.provider_error,
   });
 }
