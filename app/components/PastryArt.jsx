@@ -144,6 +144,91 @@ function Pipe({ x, y, c, n = 5, rx = 17, ry = 15 }) {
   );
 }
 
+/** כלי אפייה רדוד עם קרם — ברולה, פלאן, קרמה קטלנה */
+function Ramekin({ fill, top, topColor, wide = false }) {
+  const rx = wide ? 118 : 96;
+  return (
+    <g>
+      <ellipse cx="200" cy="206" rx={rx + 14} ry="14" fill="#000" opacity=".08" filter="url(#pa-soft)" />
+      <path d={`M${200 - rx} 142 h${rx * 2} l-10 54 q-2 10 -14 10 h-${rx * 2 - 48} q-12 0 -14 -10 Z`} fill="#F0E8F3" />
+      <path d={`M${200 - rx + 8} 148 h${rx * 2 - 16} l-9 44 q-2 8 -12 8 h-${rx * 2 - 54} q-10 0 -12 -8 Z`} fill="#FBF7FC" />
+      <ellipse cx="200" cy="142" rx={rx} ry="22" fill={fill} />
+      {topColor && <ellipse cx="200" cy="140" rx={rx - 4} ry="19" fill={topColor} />}
+      <ellipse cx="200" cy="138" rx={rx} ry="22" fill="url(#pa-glass)" opacity=".5" />
+      {top}
+    </g>
+  );
+}
+
+/** טארט פתוח עגול בחתך */
+function TartShell({ fill, crust = C.crust, top = null, h = 30 }) {
+  const y = 176 - h;
+  return (
+    <g>
+      <Plate w={300} />
+      <path d="M84 204 Q78 152 100 144 L300 144 Q322 152 316 204 Z" fill={crust} />
+      <path d="M92 198 Q88 156 106 150 L294 150 Q312 156 308 198 Z" fill="#CE9254" />
+      <rect x="100" y={y} width="200" height={176 - y} fill={fill} />
+      <rect x="100" y={y} width="200" height="6" fill="#fff" opacity=".25" />
+      {top}
+    </g>
+  );
+}
+
+/** ערימה של שכבות דקות רבות — מדוביק, בקלאווה, מיל קרפ */
+function Stack({ n = 8, c1, c2, x = 112, w = 176, baseY = 204, lh = 6, gh = 6 }) {
+  const rows = [];
+  let y = baseY;
+  for (let i = 0; i < n; i++) {
+    y -= lh;
+    rows.push(<rect key={'l' + i} x={x} y={y} width={w} height={lh} fill={c1} />);
+    if (i < n - 1) {
+      y -= gh;
+      rows.push(<rect key={'g' + i} x={x} y={y} width={w} height={gh} fill={c2} />);
+    }
+  }
+  return (
+    <g>
+      {rows}
+      <rect x={x} y={y} width={w} height={baseY - y} fill="url(#pa-sheen)" opacity=".45" />
+    </g>
+  );
+}
+
+/** ספירלה בחתך — רולדה, סינמון רול, בבקה */
+function Spiral({ cx = 200, cy = 152, turns = 3.6, c1, c2, r = 62 }) {
+  const pts = [];
+  const steps = 120;
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * turns * Math.PI * 2;
+    const rr = (r * i) / steps;
+    pts.push(`${(cx + Math.cos(t) * rr).toFixed(1)} ${(cy + Math.sin(t) * rr * 0.92).toFixed(1)}`);
+  }
+  return (
+    <g>
+      <ellipse cx={cx} cy={cy} rx={r + 5} ry={r * 0.95} fill={c1} />
+      <polyline points={pts.join(' ')} fill="none" stroke={c2} strokeWidth="9" strokeLinecap="round" />
+      <ellipse cx={cx} cy={cy} rx={r + 5} ry={r * 0.95} fill="url(#pa-sheen)" opacity=".5" />
+    </g>
+  );
+}
+
+/** עוגייה / דיסקית עגולה */
+function Disc({ fill, rim, rx = 80, ry = 40, cy = 152, bits = [] }) {
+  return (
+    <g>
+      <Plate w={250} />
+      <ellipse cx="200" cy={cy + 7} rx={rx} ry={ry} fill={rim || fill} />
+      <ellipse cx="200" cy={cy} rx={rx} ry={ry} fill={fill} />
+      <ellipse cx="200" cy={cy} rx={rx} ry={ry} fill="url(#pa-crumb)" opacity=".35" />
+      {bits.map(([bx, by, bc], i) => (
+        <ellipse key={i} cx={bx} cy={by} rx="11" ry="8" fill={bc} />
+      ))}
+      <ellipse cx="200" cy={cy} rx={rx} ry={ry} fill="url(#pa-sheen)" opacity=".35" />
+    </g>
+  );
+}
+
 const ART = {
   genoise: () => (
     <>
@@ -1008,6 +1093,782 @@ const ART = {
           <path key={i} d={`M0 0 L${Math.cos((i / 7) * 6.28) * 15} ${Math.sin((i / 7) * 6.28) * 15}`} stroke="#E8C85C" strokeWidth="1.5" />
         ))}
       </g>
+    </>
+  ),
+
+  brulee: () => (
+    <Ramekin fill="#E8B861" topColor="#C98227" wide top={
+      <g>
+        <ellipse cx="200" cy="138" rx="112" ry="19" fill="url(#pa-sheen)" opacity=".85" />
+        <ellipse cx="166" cy="132" rx="30" ry="8" fill="#fff" opacity=".45" transform="rotate(-8 166 132)" />
+        {[...Array(12)].map((_, i) => (<circle key={i} cx={110 + i * 16} cy={136 + ((i * 23) % 11)} r="1.6" fill="#7A4A12" opacity=".7" />))}
+      </g>} />
+  ),
+
+  crema: () => (
+    <Ramekin fill="#F2DC9E" topColor="#D9A445" wide top={
+      <g>
+        <ellipse cx="200" cy="138" rx="112" ry="19" fill="url(#pa-sheen)" opacity=".7" />
+        <rect x="246" y="116" width="46" height="7" rx="3.5" fill="#9A5A2A" transform="rotate(-16 246 116)" />
+      </g>} />
+  ),
+
+  flan: () => (
+    <>
+      <Plate w={280} />
+      <path d="M118 198 q-4 -66 82 -70 q86 4 82 70 Z" fill="#F6E3A8" />
+      <path d="M118 198 q-4 -66 82 -70 q86 4 82 70 Z" fill="url(#pa-sheen)" opacity=".65" />
+      <path d="M122 190 q78 -14 156 0 q4 10 -78 12 q-82 -2 -78 -12 Z" fill="#B5751F" />
+      <ellipse cx="200" cy="202" rx="96" ry="10" fill="#C98227" opacity=".75" />
+      <ellipse cx="168" cy="152" rx="26" ry="11" fill="#fff" opacity=".4" transform="rotate(-14 168 152)" />
+    </>
+  ),
+
+  pannacotta: () => (
+    <>
+      <Plate w={250} />
+      <path d="M134 196 q-2 -70 66 -72 q68 2 66 72 Z" fill="#FDF8EE" />
+      <path d="M134 196 q-2 -70 66 -72 q68 2 66 72 Z" fill="url(#pa-sheen)" opacity=".7" />
+      <path d="M152 134 q24 -14 48 -12 q26 2 46 16 q-14 34 -46 30 q-34 4 -48 -34 Z" fill="#A82540" />
+      <path d="M156 160 q10 18 4 34 M240 158 q-8 18 -2 32" stroke="#A82540" strokeWidth="6" fill="none" strokeLinecap="round" />
+      <ellipse cx="200" cy="200" rx="94" ry="9" fill="#C2304F" opacity=".5" />
+    </>
+  ),
+
+  souffle: () => (
+    <>
+      <Plate />
+      <path d="M108 206 Q104 96 200 90 Q296 96 292 206 Z" fill="#F7E9C8" />
+      <path d="M108 206 Q104 96 200 90 Q296 96 292 206 Z" fill="url(#pa-crumb)" opacity=".3" />
+      <path d="M108 130 Q104 96 200 90 Q296 96 292 130 Q248 110 200 114 Q152 110 108 130 Z" fill="#E0B873" />
+      <path d="M108 206 Q104 96 200 90 Q296 96 292 206 Z" fill="url(#pa-sheen)" opacity=".5" />
+    </>
+  ),
+
+  tatin: () => (
+    <>
+      <Plate />
+      <path d="M100 200 q-4 -24 18 -28 L282 172 q22 4 18 28 Z" fill="#D9A05E" />
+      <path d="M100 176 q0 -40 100 -44 q100 4 100 44 Z" fill="#C06B22" />
+      {[[146, 150, 30], [200, 142, 34], [254, 150, 30]].map(([cx, cy, rx], i) => (
+        <g key={i}>
+          <ellipse cx={cx} cy={cy} rx={rx} ry="17" fill="#D98A3A" />
+          <ellipse cx={cx} cy={cy - 2} rx={rx - 6} ry="13" fill="#E8A857" />
+          <ellipse cx={cx - 6} cy={cy - 6} rx={rx * 0.4} ry="5" fill="#fff" opacity=".35" />
+        </g>
+      ))}
+      <path d="M100 176 q0 -40 100 -44 q100 4 100 44 Z" fill="url(#pa-sheen)" opacity=".45" />
+    </>
+  ),
+
+  madeleine: () => (
+    <>
+      <Plate w={250} />
+      <path d="M118 178 q0 -52 82 -52 q82 0 82 52 q-82 22 -164 0 Z" fill="#E8C078" />
+      {[...Array(7)].map((_, i) => (
+        <path key={i} d={`M200 180 L${128 + i * 24} 134`} stroke="#C99A4E" strokeWidth="2.5" strokeLinecap="round" opacity=".7" />
+      ))}
+      <path d="M150 128 q50 -34 100 0 q-48 -16 -100 0 Z" fill="#D9A85F" />
+      <ellipse cx="200" cy="124" rx="44" ry="14" fill="#EFCE92" />
+      <path d="M118 178 q0 -52 82 -52 q82 0 82 52 q-82 22 -164 0 Z" fill="url(#pa-sheen)" opacity=".4" />
+    </>
+  ),
+
+  canele: () => (
+    <>
+      <Plate w={230} />
+      <path d="M152 86 h96 l-12 106 q-2 14 -18 14 h-36 q-16 0 -18 -14 Z" fill="#3E2113" />
+      {[...Array(5)].map((_, i) => (
+        <path key={i} d={`M${164 + i * 18} 88 l-2 118`} stroke="#23120A" strokeWidth="3.5" strokeLinecap="round" opacity=".8" />
+      ))}
+      <path d="M152 86 h96 l-12 106 q-2 14 -18 14 h-36 q-16 0 -18 -14 Z" fill="url(#pa-sheen)" opacity=".35" />
+      <ellipse cx="200" cy="86" rx="48" ry="11" fill="#5E3620" />
+      <ellipse cx="200" cy="85" rx="40" ry="8" fill="#B5894E" />
+    </>
+  ),
+
+  barcake: () => (
+    <>
+      <Plate w={280} />
+      <rect x="112" y="140" width="176" height="56" rx="8" fill="#E5C27E" />
+      <rect x="112" y="140" width="176" height="56" rx="8" fill="url(#pa-crumb)" opacity=".4" />
+      <path d="M112 152 q88 -22 176 0 v-4 q-88 -20 -176 0 Z" fill="#D9AE5F" />
+      <rect x="112" y="140" width="176" height="56" rx="8" fill="url(#pa-sheen)" opacity=".45" />
+      {[...Array(6)].map((_, i) => (
+        <ellipse key={i} cx={136 + i * 26} cy={134} rx="9" ry="4" fill="#C9A063" transform={`rotate(${i * 24} ${136 + i * 26} 134)`} />
+      ))}
+    </>
+  ),
+
+  florentine: () => (
+    <>
+      <Plate w={250} />
+      <ellipse cx="200" cy="160" rx="84" ry="30" fill="#3E2113" />
+      <ellipse cx="200" cy="152" rx="84" ry="30" fill="#DBA253" />
+      {[...Array(14)].map((_, i) => (
+        <ellipse key={i} cx={146 + ((i * 47) % 108)} cy={140 + ((i * 29) % 24)} rx="13" ry="4" fill="#EFD3A0"
+          transform={`rotate(${(i * 53) % 180} ${146 + ((i * 47) % 108)} ${140 + ((i * 29) % 24)})`} />
+      ))}
+      <ellipse cx="200" cy="152" rx="84" ry="30" fill="url(#pa-sheen)" opacity=".4" />
+    </>
+  ),
+
+  palmier: () => (
+    <>
+      <Plate w={250} />
+      <path d="M200 192 q-16 0 -16 -18 q-46 10 -64 -22 q-18 -34 30 -46 q36 -9 50 42 Z" fill="#DFAE63" />
+      <path d="M200 192 q16 0 16 -18 q46 10 64 -22 q18 -34 -30 -46 q-36 -9 -50 42 Z" fill="#DFAE63" />
+      <path d="M168 112 q-28 6 -18 26 q10 18 36 8" fill="none" stroke="#B8812F" strokeWidth="4" strokeLinecap="round" />
+      <path d="M232 112 q28 6 18 26 q-10 18 -36 8" fill="none" stroke="#B8812F" strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
+
+  sainthonore: () => (
+    <>
+      <Plate w={290} />
+      <rect x="104" y="174" width="192" height="22" rx="5" fill="#E0B377" />
+      <rect x="104" y="174" width="192" height="6" rx="3" fill="#F1D3A2" />
+      {[120, 168, 232, 280].map((cx, i) => (
+        <g key={i}>
+          <circle cx={cx} cy="158" r="19" fill="#E3B678" />
+          <path d={`M${cx - 19} 152 a19 19 0 0 1 38 0 Z`} fill="#C98227" />
+        </g>
+      ))}
+      <path d="M140 170 q14 -34 28 -2 q14 -34 28 -2 q14 -34 28 -2 q14 -32 26 0" fill="none" stroke={C.cream} strokeWidth="18" strokeLinecap="round" />
+      <path d="M142 162 q12 -24 26 -4" fill="none" stroke="#fff" strokeWidth="4" opacity=".5" strokeLinecap="round" />
+    </>
+  ),
+
+  fraisier: () => (
+    <>
+      <Plate />
+      <Slice layers={[{ h: 14, c: C.sponge, tex: 'pa-crumb' }, { h: 44, c: '#FDF4E2' }, { h: 14, c: C.sponge, tex: 'pa-crumb' }]}
+        top={(ty, x, w) => <rect x={x} y={ty - 9} width={w} height="9" rx="2" fill="#F0D9A0" />} />
+      {[...Array(5)].map((_, i) => (
+        <g key={i} transform={`translate(${122 + i * 36} 150)`}>
+          <path d="M0 -20 q17 0 17 14 q0 18 -17 26 q-17 -8 -17 -26 q0 -14 17 -14 Z" fill="#C2304F" />
+          <path d="M0 -14 q11 0 11 10 q0 13 -11 19 q-11 -6 -11 -19 q0 -10 11 -10 Z" fill="#E05C74" />
+        </g>
+      ))}
+    </>
+  ),
+
+  clafoutis: () => (
+    <>
+      <Plate />
+      <path d="M100 204 q-6 -56 100 -58 q106 2 100 58 Z" fill="#F3DFAE" />
+      <path d="M100 204 q-6 -56 100 -58 q106 2 100 58 Z" fill="url(#pa-crumb)" opacity=".3" />
+      <path d="M104 162 q96 -22 192 0 q-4 -16 -96 -16 q-92 0 -96 16 Z" fill="#E0C388" />
+      {[[146, 166], [188, 158], [232, 166], [268, 174], [166, 182], [214, 180]].map(([cx, cy], i) => (
+        <g key={i}>
+          <circle cx={cx} cy={cy} r="12" fill="#8E1F38" />
+          <circle cx={cx - 4} cy={cy - 4} r="3.4" fill="#fff" opacity=".35" />
+        </g>
+      ))}
+    </>
+  ),
+
+  galette: () => (
+    <>
+      <Plate />
+      <ellipse cx="200" cy="170" rx="104" ry="42" fill="#C9903F" />
+      <ellipse cx="200" cy="162" rx="104" ry="42" fill="#E0B069" />
+      {[...Array(8)].map((_, i) => {
+        const a = (i / 8) * Math.PI * 2;
+        return (
+          <path key={i} d={`M200 162 Q${200 + Math.cos(a) * 60} ${162 + Math.sin(a) * 18} ${200 + Math.cos(a) * 100} ${162 + Math.sin(a) * 40}`}
+            fill="none" stroke="#B37C32" strokeWidth="2.6" strokeLinecap="round" opacity=".85" />
+        );
+      })}
+      <ellipse cx="200" cy="162" rx="104" ry="42" fill="url(#pa-sheen)" opacity=".45" />
+    </>
+  ),
+
+  painchoc: () => (
+    <>
+      <Plate w={290} />
+      <rect x="108" y="124" width="184" height="78" rx="14" fill="#D79B50" />
+      {[...Array(5)].map((_, i) => (
+        <path key={i} d={`M${130 + i * 36} 126 q8 38 0 74`} stroke="#B87A32" strokeWidth="3" fill="none" opacity=".75" />
+      ))}
+      <rect x="150" y="150" width="14" height="28" rx="3" fill="#3E2318" />
+      <rect x="236" y="150" width="14" height="28" rx="3" fill="#3E2318" />
+      <rect x="108" y="124" width="184" height="78" rx="14" fill="url(#pa-sheen)" opacity=".45" />
+    </>
+  ),
+
+  choctart: () => (
+    <TartShell fill="#43261A" crust="#5E3A22" h={34} top={
+      <g>
+        <rect x="100" y="142" width="200" height="8" fill="#5E3A22" />
+        <rect x="100" y="142" width="200" height="4" fill="#fff" opacity=".22" />
+        <ellipse cx="168" cy="146" rx="30" ry="4" fill="#fff" opacity=".3" />
+        {[...Array(5)].map((_, i) => (<rect key={i} x={140 + i * 28} y="136" width="4" height="4" rx="1.4" fill="#fff" opacity=".75" />))}
+      </g>} />
+  ),
+
+  kouign: () => (
+    <>
+      <Plate w={250} />
+      <path d="M122 192 q-6 -70 78 -72 q84 2 78 72 Z" fill="#B5721F" />
+      <path d="M130 186 q-4 -58 70 -60 q74 2 70 60 Z" fill="#D99A3E" />
+      {[0, 1, 2, 3].map((i) => (
+        <path key={i} d={`M${150 + i * 34} 128 q${i % 2 ? 14 : -14} 30 ${i % 2 ? 6 : -6} 58`} stroke="#9A5A18" strokeWidth="4" fill="none" strokeLinecap="round" opacity=".8" />
+      ))}
+      <path d="M130 186 q-4 -58 70 -60 q74 2 70 60 Z" fill="url(#pa-sheen)" opacity=".5" />
+      <ellipse cx="200" cy="196" rx="86" ry="10" fill="#7E4A10" opacity=".6" />
+    </>
+  ),
+
+  roll: () => (
+    <>
+      <Plate w={250} />
+      <Spiral c1={C.sponge} c2="#C2304F" turns={3.4} r={60} />
+    </>
+  ),
+
+  cinnamonroll: () => (
+    <>
+      <Plate w={250} />
+      <Spiral c1="#E3B678" c2="#8A5423" turns={3.4} r={62} />
+      <path d="M142 118 q20 -14 40 -2 q20 12 40 -2 q18 -12 36 2" fill="none" stroke="#FFFDF8" strokeWidth="13" strokeLinecap="round" />
+      <path d="M150 112 q16 -10 32 0" fill="none" stroke="#fff" strokeWidth="4" opacity=".6" strokeLinecap="round" />
+    </>
+  ),
+
+  cannoli: () => (
+    <g>
+      <Plate w={280} />
+      <g transform="rotate(-10 200 160)">
+        <rect x="104" y="128" width="192" height="62" rx="31" fill="#C98A48" />
+        <rect x="104" y="128" width="192" height="62" rx="31" fill="url(#pa-crumb)" opacity=".35" />
+        {[...Array(9)].map((_, i) => (<circle key={i} cx={128 + i * 20} cy={142 + ((i * 29) % 34)} r="4" fill="#A86C2E" opacity=".5" />))}
+        <rect x="104" y="128" width="192" height="62" rx="31" fill="url(#pa-sheen)" opacity=".45" />
+        <ellipse cx="108" cy="159" rx="13" ry="30" fill="#FDF6E6" />
+        <ellipse cx="292" cy="159" rx="13" ry="30" fill="#FDF6E6" />
+        {[...Array(4)].map((_, i) => (<circle key={'p' + i} cx={102 + (i % 2) * 6} cy={144 + i * 10} r="4" fill={C.pistachio} />))}
+        {[...Array(4)].map((_, i) => (<circle key={'q' + i} cx={296 - (i % 2) * 6} cy={144 + i * 10} r="4" fill={C.pistachio} />))}
+      </g>
+    </g>
+  ),
+
+  biscotti: () => (
+    <>
+      <Plate w={280} />
+      <path d="M112 190 l24 -74 l156 0 l-24 74 Z" fill="#DFB87E" />
+      <path d="M112 190 l24 -74 l156 0 l-24 74 Z" fill="url(#pa-crumb)" opacity=".4" />
+      <path d="M136 116 l156 0 l-6 18 l-156 0 Z" fill="#E9CB9A" />
+      {[[160, 150], [196, 138], [228, 162], [252, 136], [186, 170], [262, 170]].map(([cx, cy], i) => (
+        <ellipse key={i} cx={cx} cy={cy} rx="11" ry="7" fill="#8A6239" transform={`rotate(${i * 31} ${cx} ${cy})`} />
+      ))}
+    </>
+  ),
+
+  panettone: () => (
+    <>
+      <Plate w={280} />
+      <path d="M116 200 l10 -82 l148 0 l10 82 Z" fill="#D9B894" />
+      <path d="M122 196 l9 -74 l138 0 l9 74 Z" fill="#E6D0B0" opacity=".6" />
+      <path d="M126 122 q6 -46 74 -46 q68 0 74 46 Z" fill="#D79B50" />
+      <path d="M172 86 l56 0 M200 78 l0 36" stroke="#A8692A" strokeWidth="4" strokeLinecap="round" opacity=".7" />
+      {[...Array(7)].map((_, i) => (<circle key={i} cx={142 + ((i * 53) % 118)} cy={142 + ((i * 31) % 46)} r="5" fill="#8A4A2A" opacity=".45" />))}
+      <path d="M126 122 q6 -46 74 -46 q68 0 74 46 Z" fill="url(#pa-sheen)" opacity=".45" />
+    </>
+  ),
+
+  caprese: () => (
+    <>
+      <Plate />
+      <Slice layers={[{ h: 62, c: '#3E2117', tex: 'pa-crumb-dark' }]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x} ${ty + 2} q${w * 0.25} -12 ${w * 0.5} -2 q${w * 0.25} 10 ${w * 0.5} 0 v6 h-${w} Z`} fill="#33190F" />
+            {[...Array(18)].map((_, i) => (<circle key={i} cx={x + 8 + ((i * 59) % (w - 16))} cy={ty - 6 - ((i * 23) % 7)} r="1.7" fill="#fff" opacity=".85" />))}
+          </>
+        )} />
+    </>
+  ),
+
+  strudel: () => (
+    <>
+      <Plate w={300} />
+      <path d="M78 186 q10 -56 122 -56 q112 0 122 56 Z" fill="#DFB87E" />
+      {[...Array(5)].map((_, i) => (
+        <path key={i} d={`M${110 + i * 45} 136 q6 26 0 50`} stroke="#C09050" strokeWidth="2.6" fill="none" strokeLinecap="round" opacity=".8" />
+      ))}
+      <path d="M120 150 q80 -16 160 0" stroke="#EFD3A0" strokeWidth="4" fill="none" opacity=".7" />
+      <path d="M78 186 q10 -56 122 -56 q112 0 122 56 Z" fill="url(#pa-sheen)" opacity=".45" />
+      {[...Array(16)].map((_, i) => (<circle key={'s' + i} cx={96 + ((i * 67) % 208)} cy={126 + ((i * 19) % 8)} r="1.6" fill="#fff" opacity=".75" />))}
+    </>
+  ),
+
+  blackforest: () => (
+    <>
+      <Plate />
+      <Slice layers={[
+        { h: 20, c: '#43261A', tex: 'pa-crumb-dark' },
+        { h: 13, c: '#FFFDF8' },
+        { h: 10, c: '#8E1F38' },
+        { h: 20, c: '#43261A', tex: 'pa-crumb-dark' },
+        { h: 13, c: '#FFFDF8' },
+        { h: 20, c: '#43261A', tex: 'pa-crumb-dark' },
+      ]} top={(ty, x, w) => (
+        <>
+          <rect x={x - 5} y={ty - 13} width={w + 10} height="13" rx="3" fill="#FFFDF8" />
+          <ellipse cx={x + w / 2} cy={ty - 20} rx="15" ry="9" fill="#FFFDF8" />
+          <circle cx={x + w / 2} cy={ty - 30} r="10" fill="#8E1F38" />
+          {[...Array(7)].map((_, i) => (
+            <rect key={i} x={x + 8 + i * 24} y={ty - 24} width="5" height="11" rx="1.5" fill="#2E170D" transform={`rotate(${i * 19} ${x + 10 + i * 24} ${ty - 20})`} />
+          ))}
+        </>
+      )} />
+    </>
+  ),
+
+  linzer: () => (
+    <>
+      <Plate />
+      <ellipse cx="200" cy="172" rx="104" ry="40" fill="#B8803C" />
+      <ellipse cx="200" cy="164" rx="104" ry="40" fill="#CE9A54" />
+      <ellipse cx="200" cy="164" rx="92" ry="33" fill="#9C2135" />
+      {[-2, -1, 0, 1, 2].map((i) => (<path key={'a' + i} d={`M${152 + i * 30} 134 L${216 + i * 30} 196`} stroke="#CE9A54" strokeWidth="9" strokeLinecap="round" />))}
+      {[-2, -1, 0, 1, 2].map((i) => (<path key={'b' + i} d={`M${184 + i * 30} 134 L${120 + i * 30} 196`} stroke="#CE9A54" strokeWidth="9" strokeLinecap="round" />))}
+      <ellipse cx="200" cy="164" rx="104" ry="40" fill="none" stroke="#B8803C" strokeWidth="11" />
+    </>
+  ),
+
+  bundt: () => (
+    <>
+      <Plate />
+      <path d="M94 196 q-6 -72 106 -74 q112 2 106 74 Z" fill="#DFB87E" />
+      <path d="M94 196 q-6 -72 106 -74 q112 2 106 74 Z" fill="url(#pa-crumb)" opacity=".35" />
+      {[...Array(7)].map((_, i) => (
+        <path key={i} d={`M${112 + i * 29} ${132 + Math.abs(3 - i) * 6} q6 32 0 62`} stroke="#C09050" strokeWidth="7" fill="none" strokeLinecap="round" opacity=".5" />
+      ))}
+      <ellipse cx="200" cy="124" rx="34" ry="12" fill="#F4EAF6" />
+      {[...Array(18)].map((_, i) => (<circle key={i} cx={102 + ((i * 71) % 196)} cy={118 + ((i * 23) % 12)} r="1.7" fill="#fff" opacity=".8" />))}
+    </>
+  ),
+
+  stollen: () => (
+    <>
+      <Plate w={300} />
+      <path d="M82 188 q14 -58 118 -58 q104 0 118 58 Z" fill="#E8DCC2" />
+      <path d="M118 148 q82 -22 164 2 q-10 -20 -82 -20 q-72 0 -82 18 Z" fill="#F7F1E4" />
+      {[...Array(9)].map((_, i) => (<circle key={i} cx={110 + ((i * 59) % 180)} cy={160 + ((i * 29) % 22)} r="5" fill="#A8692A" opacity=".3" />))}
+      {[...Array(26)].map((_, i) => (<circle key={'s' + i} cx={92 + ((i * 73) % 216)} cy={126 + ((i * 31) % 16)} r={1.5 + ((i * 7) % 3) * 0.4} fill="#fff" />))}
+    </>
+  ),
+
+  medovik: () => (
+    <>
+      <Plate />
+      <Stack n={8} c1="#C08A48" c2="#FBF5E8" lh={7} gh={7} />
+    </>
+  ),
+
+  scone: () => (
+    <>
+      <Plate w={250} />
+      <path d="M128 192 l6 -56 l132 0 l6 56 Z" fill="#E3BE83" />
+      <path d="M128 192 l6 -56 l132 0 l6 56 Z" fill="url(#pa-crumb)" opacity=".4" />
+      <path d="M134 136 q66 -34 132 0 Z" fill="#D9A85F" />
+      <rect x="130" y="158" width="140" height="7" fill="#FBF1DC" opacity=".9" />
+      <path d="M136 160 q30 -10 60 2 q32 12 68 -2" stroke="#C2304F" strokeWidth="6" fill="none" strokeLinecap="round" opacity=".85" />
+      {[...Array(6)].map((_, i) => (<circle key={i} cx={148 + i * 22} cy={176 + ((i * 19) % 10)} r="4" fill="#8A5423" opacity=".45" />))}
+    </>
+  ),
+
+  toffee: () => (
+    <>
+      <Plate />
+      <rect x="118" y="134" width="164" height="68" rx="9" fill="#5A3417" />
+      <rect x="118" y="134" width="164" height="68" rx="9" fill="url(#pa-crumb-dark)" />
+      <path d="M110 140 q22 18 44 4 q24 -14 46 6 q22 18 46 2 q22 -14 44 2 v-18 h-180 Z" fill="#C47A2C" />
+      <path d="M110 140 q22 18 44 4 q24 -14 46 6 q22 18 46 2 q22 -14 44 2" fill="none" stroke="#E8A95A" strokeWidth="5" strokeLinecap="round" />
+      <ellipse cx="200" cy="206" rx="96" ry="10" fill="#C47A2C" opacity=".5" />
+    </>
+  ),
+
+  etonmess: () => (
+    <>
+      <Plate w={210} y={216} />
+      <path d="M150 82 h100 l-12 116 q-2 14 -16 14 h-44 q-14 0 -16 -14 Z" fill="#F3EEF6" opacity=".5" />
+      <path d="M154 118 h92 l-10 80 q-1 10 -13 10 h-46 q-12 0 -13 -10 Z" fill="#FDF8FA" />
+      {[[172, 134, '#C2304F'], [214, 128, '#FFFDF8'], [192, 152, '#E8D9C2'], [228, 158, '#C2304F'], [168, 170, '#FFFDF8'], [208, 182, '#E8D9C2'], [182, 194, '#C2304F']].map(([cx, cy, c], i) => (
+        <circle key={i} cx={cx} cy={cy} r={11 - (i % 3) * 2} fill={c} />
+      ))}
+      <path d="M156 112 q44 -16 88 0 q-8 16 -44 16 q-36 0 -44 -16 Z" fill="#FFFDF8" />
+      <circle cx="206" cy="102" r="11" fill="#C2304F" />
+      <path d="M150 82 h100 l-12 116 q-2 14 -16 14 h-44 q-14 0 -16 -14 Z" fill="none" stroke="#DED2E6" strokeWidth="3" />
+    </>
+  ),
+
+  banoffee: () => (
+    <>
+      <Plate />
+      <Slice layers={[{ h: 16, c: C.crustDark }, { h: 16, c: '#B5721F' }, { h: 18, c: '#EFD9A0' }, { h: 26, c: '#FFFDF8' }]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x} ${ty} q${w * 0.25} -12 ${w * 0.5} -2 q${w * 0.25} 10 ${w * 0.5} -4 v6 h-${w} Z`} fill="#FFFDF8" />
+            {[...Array(9)].map((_, i) => (
+              <rect key={i} x={x + 10 + i * 19} y={ty - 14} width="7" height="5" rx="2" fill="#3E2113" transform={`rotate(${i * 23} ${x + 13 + i * 19} ${ty - 12})`} />
+            ))}
+          </>
+        )} />
+      {[...Array(4)].map((_, i) => (
+        <ellipse key={i} cx={132 + i * 46} cy={166} rx="20" ry="8" fill="#F3E0A8" stroke="#D9BE72" strokeWidth="1.6" />
+      ))}
+    </>
+  ),
+
+  victoria: () => (
+    <>
+      <Plate />
+      <Slice layers={[
+        { h: 32, c: '#EFD9A8', tex: 'pa-crumb' },
+        { h: 10, c: '#C2304F' },
+        { h: 14, c: '#FFFDF8' },
+        { h: 32, c: '#EFD9A8', tex: 'pa-crumb' },
+      ]} top={(ty, x, w) => (
+        <g opacity=".9">
+          {[...Array(16)].map((_, i) => (<circle key={i} cx={x + 8 + ((i * 61) % (w - 16))} cy={ty - 5 - ((i * 23) % 7)} r="1.7" fill="#fff" />))}
+        </g>
+      )} />
+    </>
+  ),
+
+  crumble: () => (
+    <>
+      <Plate w={300} />
+      <path d="M92 200 q-4 -14 10 -16 l196 0 q14 2 10 16 Z" fill="#EFE2E9" />
+      <rect x="100" y="156" width="200" height="30" fill="#D9A85F" />
+      {[[130, 166], [168, 174], [206, 164], [246, 176], [278, 166]].map(([cx, cy], i) => (
+        <ellipse key={i} cx={cx} cy={cy} rx="16" ry="9" fill="#E8C98A" />
+      ))}
+      {[...Array(34)].map((_, i) => (
+        <ellipse key={'c' + i} cx={106 + ((i * 53) % 190)} cy={126 + ((i * 29) % 30)} rx={6 + ((i * 7) % 4)} ry={5 + ((i * 5) % 3)} fill={i % 3 === 0 ? '#C9903F' : '#DFB87E'} />
+      ))}
+    </>
+  ),
+
+  bakewell: () => (
+    <TartShell fill="#E8CE94" h={32} top={
+      <g>
+        <rect x="100" y="138" width="200" height="8" fill="#9C2135" />
+        <rect x="100" y="126" width="200" height="12" rx="3" fill="#FBFAF4" />
+        <rect x="100" y="126" width="200" height="5" rx="2" fill="#fff" opacity=".7" />
+        <circle cx="200" cy="116" r="11" fill="#B22A46" />
+      </g>} />
+  ),
+
+  applepie: () => (
+    <>
+      <Plate />
+      <path d="M86 204 q-6 -22 18 -26 L296 178 q24 4 18 26 Z" fill="#C9903F" />
+      <path d="M94 180 q4 -52 106 -54 q102 2 106 54 Z" fill="#E0B069" />
+      {[...Array(4)].map((_, i) => (
+        <path key={i} d={`M${152 + i * 32} ${142 + Math.abs(1.5 - i) * 6} l10 22`} stroke="#9A6A24" strokeWidth="3.4" strokeLinecap="round" />
+      ))}
+      <path d="M94 180 q4 -52 106 -54 q102 2 106 54" fill="none" stroke="#B37C32" strokeWidth="3" />
+      <path d="M86 196 q22 -12 42 0 q22 12 44 0 q22 -12 44 0 q22 12 44 0 q20 -10 40 2" fill="none" stroke="#C9903F" strokeWidth="7" strokeLinecap="round" />
+      <path d="M94 180 q4 -52 106 -54 q102 2 106 54 Z" fill="url(#pa-sheen)" opacity=".4" />
+    </>
+  ),
+
+  pecanpie: () => (
+    <TartShell fill="#8A5020" h={30} top={
+      <g>
+        {[[136, 138], [176, 132], [216, 138], [256, 132], [292, 140], [156, 148], [236, 148]].map(([cx, cy], i) => (
+          <g key={i} transform={`translate(${cx} ${cy}) rotate(${(i * 37) % 60})`}>
+            <ellipse cx="0" cy="0" rx="17" ry="11" fill="#B5793A" />
+            <path d="M0 -11 v22 M-12 -5 q6 6 0 12 M12 -5 q-6 6 0 12" stroke="#8A5020" strokeWidth="1.8" fill="none" />
+          </g>
+        ))}
+      </g>} />
+  ),
+
+  keylime: () => (
+    <>
+      <Plate />
+      <Slice layers={[{ h: 16, c: C.crustDark }, { h: 46, c: '#E6EFA8' }]}
+        top={(ty, x, w) => (
+          <>
+            <rect x={x} y={ty - 5} width={w} height="5" fill="#D6E394" />
+            <path d={`M${x + 10} ${ty - 5} q14 -22 28 -2 q14 -22 28 -2 q14 -22 28 -2 q14 -22 28 -2 q14 -20 26 0 v8 h-${w - 20} Z`} fill="#FFFDF8" />
+            <circle cx={x + w / 2} cy={ty - 34} r="10" fill="#8FA84E" />
+            <circle cx={x + w / 2} cy={ty - 34} r="7" fill="#C5D977" />
+          </>
+        )} />
+    </>
+  ),
+
+  cupcake: () => (
+    <>
+      <Plate w={240} />
+      <path d="M144 134 l12 70 q2 10 14 10 h60 q12 0 14 -10 l12 -70 Z" fill="#E3A8C0" />
+      {[...Array(7)].map((_, i) => (<path key={i} d={`M${152 + i * 16} 136 l${4 + i} 76`} stroke="#C97F9E" strokeWidth="2.6" opacity=".65" />))}
+      <path d="M144 134 h112 l-4 -22 q-52 -14 -104 0 Z" fill="#E8C78C" />
+      <path d="M156 112 q6 -26 44 -24 q38 -2 44 24 q-14 -12 -30 -6 q-14 -16 -30 -2 q-16 -10 -28 8 Z" fill="#FBF3F7" />
+      <path d="M164 96 q10 -24 36 -22 q26 -2 36 22 q-14 -10 -26 -4 q-12 -14 -24 -2 q-12 -8 -22 6 Z" fill="#FFFDFE" />
+      <circle cx="200" cy="64" r="9" fill="#C2304F" />
+    </>
+  ),
+
+  lemonbar: () => (
+    <>
+      <Plate w={270} />
+      <Slice x={124} w={152} layers={[{ h: 22, c: '#E3BE83' }, { h: 44, c: '#F2D45E' }]}
+        top={(ty, x, w) => (
+          <>
+            <rect x={x} y={ty - 4} width={w} height="4" fill="#E8C33C" />
+            {[...Array(20)].map((_, i) => (<circle key={i} cx={x + 6 + ((i * 59) % (w - 12))} cy={ty - 7 - ((i * 23) % 8)} r="1.8" fill="#fff" />))}
+          </>
+        )} />
+    </>
+  ),
+
+  waffle: () => (
+    <>
+      <Plate w={260} />
+      <rect x="118" y="124" width="164" height="76" rx="18" fill="#D9A85F" />
+      {[0, 1, 2].map((r) => [0, 1, 2, 3].map((c) => (
+        <rect key={`${r}-${c}`} x={128 + c * 38} y={134 + r * 24} width="30" height="16" rx="4" fill="#B8803C" />
+      )))}
+      <rect x="118" y="124" width="164" height="76" rx="18" fill="url(#pa-sheen)" opacity=".4" />
+      {[...Array(10)].map((_, i) => (<circle key={i} cx={132 + ((i * 53) % 142)} cy={130 + ((i * 29) % 14)} r="3" fill="#F3E2B8" />))}
+    </>
+  ),
+
+  pancake: () => (
+    <>
+      <Plate w={250} />
+      {[0, 1, 2].map((i) => (
+        <g key={i}>
+          <ellipse cx="200" cy={186 - i * 26} rx={82 - i * 2} ry="17" fill="#C9903F" />
+          <ellipse cx="200" cy={182 - i * 26} rx={82 - i * 2} ry="17" fill="#E3B678" />
+        </g>
+      ))}
+      <ellipse cx="200" cy="130" rx="80" ry="16" fill="#EFC992" />
+      <path d="M160 124 q20 -8 40 -2 q20 6 38 -4 q-6 16 -38 18 q-34 -2 -40 -12 Z" fill="#C47A2C" />
+      <rect x="186" y="106" width="28" height="12" rx="3" fill="#F7E8A8" />
+      <path d="M130 136 q-6 18 2 30 M268 134 q8 16 0 28" stroke="#C47A2C" strokeWidth="5" fill="none" strokeLinecap="round" />
+    </>
+  ),
+
+  lamington: () => (
+    <>
+      <Plate w={250} />
+      <rect x="134" y="118" width="132" height="86" rx="8" fill="#3E2113" />
+      <rect x="142" y="126" width="116" height="70" rx="5" fill="#EFD9A8" />
+      <rect x="142" y="126" width="116" height="70" rx="5" fill="url(#pa-crumb)" opacity=".4" />
+      <rect x="134" y="118" width="132" height="86" rx="8" fill="none" stroke="#2E170D" strokeWidth="9" />
+      {[...Array(40)].map((_, i) => (
+        <ellipse key={i} cx={132 + ((i * 47) % 138)} cy={116 + ((i * 29) % 92)} rx="4" ry="2" fill="#FBF7EE"
+          transform={`rotate(${(i * 43) % 180} ${132 + ((i * 47) % 138)} ${116 + ((i * 29) % 92)})`} />
+      ))}
+    </>
+  ),
+
+  nata: () => (
+    <>
+      <Plate w={240} />
+      <path d="M132 134 l14 62 q2 10 14 10 h80 q12 0 14 -10 l14 -62 Z" fill="#D9A85F" />
+      {[...Array(8)].map((_, i) => (<path key={i} d={`M${142 + i * 16} 136 l${3 + i * 0.6} 68`} stroke="#B8803C" strokeWidth="2.4" opacity=".65" />))}
+      <ellipse cx="200" cy="134" rx="68" ry="20" fill="#E8C78C" />
+      <ellipse cx="200" cy="132" rx="58" ry="16" fill="#F2D98E" />
+      {[[172, 126], [206, 136], [230, 124], [190, 140]].map(([cx, cy], i) => (
+        <ellipse key={i} cx={cx} cy={cy} rx="12" ry="6" fill="#3E2113" opacity=".85" />
+      ))}
+      <ellipse cx="200" cy="132" rx="58" ry="16" fill="url(#pa-glass)" opacity=".45" />
+    </>
+  ),
+
+  churros: () => (
+    <>
+      <Plate w={280} />
+      {[0, 1, 2].map((i) => (
+        <g key={i} transform={`rotate(${-14 + i * 14} 200 160) translate(0 ${i * 4})`}>
+          <rect x="96" y={140 + i * 4} width="208" height="24" rx="12" fill="#D99A3E" />
+          {[...Array(14)].map((_, j) => (<rect key={j} x={100 + j * 15} y={140 + i * 4} width="5" height="24" rx="2.5" fill="#B8762A" opacity=".7" />))}
+          <rect x="96" y={140 + i * 4} width="208" height="24" rx="12" fill="url(#pa-sheen)" opacity=".35" />
+        </g>
+      ))}
+      {[...Array(16)].map((_, i) => (<circle key={i} cx={110 + ((i * 61) % 180)} cy={118 + ((i * 29) % 18)} r="1.8" fill="#C9903F" opacity=".9" />))}
+    </>
+  ),
+
+  tresleches: () => (
+    <>
+      <Plate />
+      <Slice layers={[{ h: 20, c: '#E3C98E' }, { h: 44, c: '#F3E3BE', tex: 'pa-crumb' }]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x - 4} ${ty} q${w * 0.17} -14 ${w * 0.33} -2 q${w * 0.17} 12 ${w * 0.34} -2 q${w * 0.17} -12 ${w * 0.33} 4 v8 h-${w + 8} Z`} fill="#FFFDF8" />
+            {[...Array(12)].map((_, i) => (<circle key={i} cx={x + 10 + ((i * 53) % (w - 20))} cy={ty - 18 - ((i * 19) % 6)} r="1.6" fill="#A8692A" opacity=".85" />))}
+          </>
+        )} />
+    </>
+  ),
+
+  brigadeiro: () => (
+    <>
+      <Plate w={260} />
+      {[[152, 168, 32], [214, 158, 36], [266, 172, 28]].map(([cx, cy, r], i) => (
+        <g key={i}>
+          <circle cx={cx} cy={cy} r={r} fill="#3A1D12" />
+          {[...Array(16)].map((_, j) => (
+            <circle key={j} cx={cx + Math.cos((j / 16) * 6.28) * (r - 5)} cy={cy + Math.sin((j / 16) * 6.28) * (r - 5)} r="4" fill="#23110A" />
+          ))}
+          <circle cx={cx - r * 0.3} cy={cy - r * 0.35} r={r * 0.2} fill="#fff" opacity=".16" />
+        </g>
+      ))}
+    </>
+  ),
+
+  alfajor: () => (
+    <>
+      <Plate w={250} />
+      <ellipse cx="200" cy="186" rx="76" ry="20" fill="#EFDCB0" />
+      <rect x="124" y="150" width="152" height="30" fill="#B5721F" />
+      <ellipse cx="200" cy="150" rx="76" ry="20" fill="#F7EBCE" />
+      <ellipse cx="200" cy="146" rx="76" ry="20" fill="#FBF3DE" />
+      {[...Array(24)].map((_, i) => (
+        <ellipse key={i} cx={126 + ((i * 41) % 148)} cy={152 + ((i * 17) % 28)} rx="4" ry="2" fill="#FBF7EE"
+          transform={`rotate(${(i * 51) % 180} ${126 + ((i * 41) % 148)} ${152 + ((i * 17) % 28)})`} />
+      ))}
+    </>
+  ),
+
+  millecrepe: () => (
+    <>
+      <Plate />
+      <Stack n={11} c1="#E8C78C" c2="#FDF6E6" lh={4} gh={6} />
+    </>
+  ),
+
+  shortcake: () => (
+    <>
+      <Plate />
+      <Slice layers={[
+        { h: 20, c: '#FBF0DC', tex: 'pa-crumb' },
+        { h: 16, c: '#FFFDF8' },
+        { h: 20, c: '#FBF0DC', tex: 'pa-crumb' },
+        { h: 16, c: '#FFFDF8' },
+        { h: 20, c: '#FBF0DC', tex: 'pa-crumb' },
+      ]} top={(ty, x, w) => (
+        <>
+          <rect x={x - 5} y={ty - 12} width={w + 10} height="12" rx="3" fill="#FFFDF8" />
+          <g transform={`translate(${x + w / 2} ${ty - 28})`}>
+            <path d="M0 -14 q15 0 15 12 q0 16 -15 23 q-15 -7 -15 -23 q0 -12 15 -12 Z" fill="#C2304F" />
+            <path d="M0 -14 q-6 -8 -14 -8 q6 6 8 9" fill="#4E7352" />
+          </g>
+        </>
+      )} />
+      {[...Array(4)].map((_, i) => (
+        <path key={i} d={`M${132 + i * 44} 150 q13 0 13 10 q0 13 -13 19 q-13 -6 -13 -19 q0 -10 13 -10 Z`} fill="#C2304F" />
+      ))}
+    </>
+  ),
+
+  knafeh: () => (
+    <>
+      <Plate w={300} />
+      <Slice x={104} w={192} layers={[{ h: 20, c: '#D9873A' }, { h: 30, c: '#FDF8EE' }, { h: 22, c: '#E09A3E' }]}
+        top={(ty, x, w) => (
+          <>
+            {[...Array(22)].map((_, i) => (
+              <path key={i} d={`M${x + 4 + i * 8.6} ${ty} q3 -9 0 -14`} stroke="#C96E22" strokeWidth="3" fill="none" strokeLinecap="round" />
+            ))}
+            {[...Array(9)].map((_, i) => (
+              <ellipse key={'p' + i} cx={x + 16 + i * 21} cy={ty - 18} rx="6" ry="4" fill={C.pistachio} transform={`rotate(${i * 29} ${x + 16 + i * 21} ${ty - 18})`} />
+            ))}
+          </>
+        )} />
+      <path d="M112 164 q46 14 88 2 q44 -12 88 4" stroke="#FFFDF8" strokeWidth="5" fill="none" opacity=".65" strokeLinecap="round" />
+    </>
+  ),
+
+  baklava: () => (
+    <>
+      <Plate w={280} />
+      <Stack n={5} c1="#E3BE83" c2="#8A6239" x={118} w={164} baseY={196} lh={7} gh={5} />
+      <path d="M118 136 l164 0" stroke="#D9A85F" strokeWidth="5" />
+      {[...Array(8)].map((_, i) => (
+        <ellipse key={i} cx={134 + i * 22} cy={128} rx="7" ry="4.5" fill={C.pistachio} transform={`rotate(${i * 33} ${134 + i * 22} 128)`} />
+      ))}
+      <path d="M118 194 q40 10 82 0 q42 -10 82 2" stroke="#C9903F" strokeWidth="5" fill="none" opacity=".65" strokeLinecap="round" />
+    </>
+  ),
+
+  basbousa: () => (
+    <>
+      <Plate w={270} />
+      <path d="M200 110 l78 46 l-78 46 l-78 -46 Z" fill="#E0B069" />
+      <path d="M200 110 l78 46 l-78 46 l-78 -46 Z" fill="url(#pa-crumb)" opacity=".45" />
+      <path d="M200 116 l68 40 l-68 40 l-68 -40 Z" fill="none" stroke="#C9903F" strokeWidth="2.4" opacity=".7" />
+      <ellipse cx="200" cy="152" rx="13" ry="9" fill="#C9A063" />
+      <ellipse cx="197" cy="149" rx="4" ry="2.6" fill="#E8D4A8" />
+      <path d="M200 110 l78 46 l-78 46 l-78 -46 Z" fill="url(#pa-sheen)" opacity=".4" />
+    </>
+  ),
+
+  tahinicookie: () => <Disc fill="#E8D6B0" rim="#D6C097" rx={76} ry={36} />,
+
+  datecake: () => (
+    <>
+      <Plate w={280} />
+      <Slice x={118} w={164} layers={[{ h: 82, c: '#5E3A1E', tex: 'pa-crumb-dark' }]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x - 3} ${ty + 2} q${w * 0.25} -14 ${w * 0.5} -4 q${w * 0.25} 12 ${w * 0.5} -4 v10 h-${w + 6} Z`} fill="#8A5020" />
+            <path d={`M${x - 3} ${ty + 2} q${w * 0.25} -14 ${w * 0.5} -4 q${w * 0.25} 12 ${w * 0.5} -4`} fill="none" stroke="#C47A2C" strokeWidth="5" strokeLinecap="round" />
+          </>
+        )} />
+      {[...Array(7)].map((_, i) => (
+        <ellipse key={i} cx={134 + ((i * 59) % 132)} cy={158 + ((i * 31) % 40)} rx="8" ry="5" fill="#C9A063" opacity=".85"
+          transform={`rotate(${i * 37} ${134 + ((i * 59) % 132)} ${158 + ((i * 31) % 40)})`} />
+      ))}
+    </>
+  ),
+
+  poppy: () => (
+    <>
+      <Plate w={280} />
+      <Slice x={118} w={164} layers={[
+        { h: 26, c: '#F0DCA8', tex: 'pa-crumb' },
+        { h: 24, c: '#2E2630' },
+        { h: 30, c: '#F0DCA8', tex: 'pa-crumb' },
+      ]} top={(ty, x, w) => (
+        <path d={`M${x} ${ty + 2} Q${x + w / 2} ${ty - 16} ${x + w} ${ty + 2} Z`} fill="#E3C98E" />
+      )} />
+    </>
+  ),
+
+  hamantasch: () => (
+    <>
+      <Plate w={250} />
+      <path d="M200 102 L286 196 L114 196 Z" fill="#E8C78C" />
+      <path d="M200 102 L286 196 L114 196 Z" fill="url(#pa-crumb)" opacity=".35" />
+      <path d="M200 128 L252 186 L148 186 Z" fill="#3E2318" />
+      <path d="M200 102 L252 186 M200 102 L148 186 M148 186 L252 186" stroke="#D9A85F" strokeWidth="13" strokeLinejoin="round" />
+      <path d="M200 102 L286 196 L114 196 Z" fill="url(#pa-sheen)" opacity=".35" />
+    </>
+  ),
+
+  coconut: () => (
+    <>
+      <Plate w={250} />
+      {[[156, 166, 34], [218, 158, 38], [268, 172, 28]].map(([cx, cy, r], i) => (
+        <g key={i}>
+          <path d={`M${cx - r} ${cy + r * 0.7} q${r * 0.1} -${r * 1.7} ${r} -${r * 1.7} q${r * 0.9} 0 ${r} ${r * 1.7} Z`} fill="#F3E6C8" />
+          {[...Array(20)].map((_, j) => (
+            <ellipse key={j} cx={cx - r + 6 + ((j * 29) % (r * 2 - 12))} cy={cy - r * 0.9 + ((j * 19) % (r * 1.5))} rx="4" ry="2" fill="#E0CDA4"
+              transform={`rotate(${(j * 47) % 180} ${cx - r + 6 + ((j * 29) % (r * 2 - 12))} ${cy - r * 0.9 + ((j * 19) % (r * 1.5))})`} />
+          ))}
+          <path d={`M${cx - r} ${cy + r * 0.7} h${r * 2}`} stroke="#C9903F" strokeWidth="4" strokeLinecap="round" />
+        </g>
+      ))}
     </>
   ),
 };

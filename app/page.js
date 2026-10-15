@@ -20,7 +20,15 @@ const FILTER_MAP = {
   'בצקים וקרמים': ['בצק', 'קרם', 'ציפוי'],
 };
 
-const SECTION_ICON = { foundations: 'layers', everyday: 'cream', signature: 'cake' };
+const SECTION_ICON = {
+  foundations: 'layers',
+  everyday: 'cream',
+  signature: 'cake',
+  france: 'patisserie',
+  europe: 'meringue',
+  americas: 'glaze',
+  levant: 'base',
+};
 
 function Dots({ n }) {
   return (

@@ -1,8 +1,20 @@
 import { foundations } from './foundations';
 import { cakes } from './cakes';
 import { israeli } from './israeli';
+import { france } from './france';
+import { europe } from './europe';
+import { americas } from './americas';
+import { levant } from './levant';
 
-export const recipes = [...foundations, ...israeli, ...cakes];
+export const recipes = [
+  ...foundations,
+  ...israeli,
+  ...cakes,
+  ...france,
+  ...europe,
+  ...americas,
+  ...levant,
+];
 
 export const SECTIONS = [
   {
@@ -22,6 +34,30 @@ export const SECTIONS = [
     label: 'עוגות ופטיסרי',
     note: 'מתכוני חתימה מלאים, מההרכבה ועד החיתוך',
     ids: cakes.map((r) => r.id),
+  },
+  {
+    id: 'france',
+    label: 'צרפת',
+    note: 'הקלאסיקות שעליהן בנויה כל קונדיטוריה במערב',
+    ids: france.map((r) => r.id),
+  },
+  {
+    id: 'europe',
+    label: 'אירופה',
+    note: 'איטליה, אוסטריה וגרמניה, בריטניה',
+    ids: europe.map((r) => r.id),
+  },
+  {
+    id: 'americas',
+    label: 'אמריקה',
+    note: 'צפון אמריקה, איבריה ואמריקה הלטינית',
+    ids: americas.map((r) => r.id),
+  },
+  {
+    id: 'levant',
+    label: 'אסיה והמזרח',
+    note: 'יפן, הלבנט וישראל',
+    ids: levant.map((r) => r.id),
   },
 ];
 
@@ -66,7 +102,7 @@ const SYNONYMS = {
 function haystack(r) {
   const ing = r.groups.flatMap((g) => g.items.map((i) => i.n)).join(' ');
   return fold(
-    [r.title, r.sub, r.kind, r.blurb, ing, (r.notes || []).join(' ')].join(' ')
+    [r.title, r.sub, r.kind, r.origin || '', r.blurb, ing, (r.notes || []).join(' ')].join(' ')
   );
 }
 
