@@ -12,8 +12,48 @@ export const runtime = 'nodejs';
  * ולא מהדפדפן. שום תגובה כאן לא מחזירה אותו, גם לא חלקית.
  */
 
-const MODEL = () => process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+// ברירת מחדל היא כינוי שגוגל מעדכנת בעצמה, ולא שם דגם קבוע.
+// דגמים ספציפיים יוצאים משימוש — בדיוק מה שקרה ל־gemini-2.5-flash.
+const DEFAULT_MODEL = 'gemini-flash-latest';
+const MODEL = () => resolvedModel || process.env.GEMINI_MODEL || DEFAULT_MODEL;
 const hasKey = () => Boolean(process.env.GEMINI_API_KEY);
+
+// נלמד פעם אחת לכל מופע אם הדגם שהוגדר כבר לא קיים
+let resolvedModel = null;
+
+/** שואל את Google אילו דגמים המפתח רשאי להשתמש בהם */
+async function listModels() {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return [];
+  try {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+      headers: { 'x-goog-api-key': key },
+    });
+    if (!res.ok) return [];
+    const d = await res.json();
+    return (d.models || [])
+      .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
+      .map((m) => String(m.name || '').replace('models/', ''));
+  } catch {
+    return [];
+  }
+}
+
+/** בוחר את דגם ה־flash הזמין הטוב ביותר, עם העדפה ליציב על פני preview */
+function pickModel(names) {
+  const usable = names.filter((n) => !/tts|image|audio|embedding|vision/.test(n));
+  const score = (n) => {
+    let s = 0;
+    if (n.includes('flash')) s += 100;
+    if (n.endsWith('-latest')) s += 50;
+    if (!n.includes('preview')) s += 25;
+    if (n.includes('lite')) s -= 15;
+    const v = n.match(/gemini-(\d+(?:\.\d+)?)/);
+    if (v) s += parseFloat(v[1]);
+    return s;
+  };
+  return usable.sort((a, b) => score(b) - score(a))[0] || null;
+}
 
 const SYSTEM =
   'את קונדיטורית מקצועית. השיבי בעברית בלבד. כל הכמויות במשקל (גרם). ' +
@@ -21,7 +61,7 @@ const SYSTEM =
   'שלבים ממוספרים, אלרגנים, ושתי הערות מקצועיות. בלי הקדמות ובלי סיכומים.';
 
 /** קריאה אחת ל־Gemini. מחזירה { text } או { error } — לעולם לא את המפתח. */
-async function callGemini({ prompt, maxTokens = 1800, timeoutMs = 15000 }) {
+async function callGemini({ prompt, maxTokens = 1800, timeoutMs = 15000, retried = false }) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { error: 'not_configured' };
 
@@ -44,6 +84,17 @@ async function callGemini({ prompt, maxTokens = 1800, timeoutMs = 15000 }) {
         signal: controller.signal,
       }
     );
+
+    // דגם שהוצא משימוש מחזיר 404. במקרה כזה מגלים דגם חלופי ומנסים שוב, פעם אחת.
+    if (res.status === 404 && !retried) {
+      const found = pickModel(await listModels());
+      if (found && found !== MODEL()) {
+        resolvedModel = found;
+        console.error('Gemini model unavailable, switched to', found);
+        clearTimeout(timer);
+        return callGemini({ prompt, maxTokens, timeoutMs, retried: true });
+      }
+    }
 
     if (!res.ok) {
       const code =
@@ -157,6 +208,7 @@ export async function GET(request) {
     aiConfigured: hasKey(),
     aiEnabled: hasKey(),
     model: hasKey() ? MODEL() : null,
+    modelSource: resolvedModel ? 'auto-discovered' : process.env.GEMINI_MODEL ? 'configured' : 'default',
   };
 
   if (!probe) return Response.json(base);
