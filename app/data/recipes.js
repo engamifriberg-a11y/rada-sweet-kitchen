@@ -72,23 +72,41 @@ export function searchRecipes(query) {
     .join(' ');
   const terms = [...new Set(expanded.split(' ').filter((w) => w.length > 1))];
 
-  return recipes
+  const scored = recipes
     .map((r) => {
       const hay = haystack(r);
       const title = fold(r.title + ' ' + r.sub);
       let score = 0;
+      let hits = 0;
       for (const t of terms) {
-        if (title.includes(t)) score += 10;
-        else if (hay.includes(t)) score += 3;
-        else if (t.length > 3 && hay.includes(t.slice(0, -1))) score += 1;
+        if (title.includes(t)) {
+          score += 10;
+          hits++;
+        } else if (hay.includes(t)) {
+          score += 3;
+          hits++;
+        } else if (t.length >= 5 && hay.includes(t.slice(0, -1))) {
+          score += 1;
+          hits++;
+        }
       }
+      // בלי התאמה אמיתית אין תוצאה. בונוס "בשליפה" ניתן רק למתכון שכבר נמצא.
+      if (hits === 0) return { recipe: r, score: 0 };
+      // דרישת כיסוי: בחיפוש של כמה מילים, מתכון שענה רק על מילה אחת מתוך שלוש ומעלה יורד
+      if (terms.length >= 3 && hits === 1) return { recipe: r, score: 0 };
+      score += hits * 2;
       if (title === q) score += 50;
       if (r.essential) score += 1;
-      return { recipe: r, score };
+      return { recipe: r, score, hits };
     })
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map((x) => x.recipe);
+    .filter((x) => x.score > 0);
+
+  // אם יש מתכונים שעונים על כל מילות החיפוש — מציגים רק אותם.
+  // אחרת נופלים חזרה להתאמות חלקיות, כדי שחיפוש לא יחזור ריק סתם.
+  const full = scored.filter((x) => x.hits === terms.length);
+  const chosen = full.length ? full : scored;
+
+  return chosen.sort((a, b) => b.score - a.score).map((x) => x.recipe);
 }
 
 export function scaleQty(q, factor) {
