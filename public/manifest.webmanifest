@@ -1,13 +1,13 @@
 {
-  "name": "Rada's Sweet Kitchen - המטבח של רדה",
-  "short_name": "Rada Kitchen",
-  "description": "מתכוני קונדיטוריה מקצועיים עם AI",
-  "lang": "he",
-  "dir": "rtl",
+  "name": "Rada — מטבח הקונדיטוריה",
+  "short_name": "Rada",
+  "description": "כלי עבודה לקונדיטורית: מתכוני יסוד ועוגות חתימה בעברית",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fff0f7",
-  "theme_color": "#c6387c",
+  "background_color": "#F4EEE4",
+  "theme_color": "#2B211A",
+  "lang": "he",
+  "dir": "rtl",
   "icons": [
     {
       "src": "/cake-icon.svg",

@@ -1,0 +1,108 @@
+import { foundations } from './foundations';
+import { cakes } from './cakes';
+
+export const recipes = [...foundations, ...cakes];
+
+export const SECTIONS = [
+  {
+    id: 'foundations',
+    label: 'יסודות הקונדיטור',
+    note: 'מה שחייב להיות בשליפה כשמכינים עוגות',
+    ids: foundations.map((r) => r.id),
+  },
+  {
+    id: 'signature',
+    label: 'עוגות ופטיסרי',
+    note: 'מתכוני חתימה מלאים, מההרכבה ועד החיתוך',
+    ids: cakes.map((r) => r.id),
+  },
+];
+
+export const KINDS = ['הכול', 'ספוג', 'קרם', 'מרנג', 'בצק', 'בסיס', 'ציפוי', 'עוגה', 'פטיסרי', 'מאפה שמרים'];
+
+export function getRecipe(id) {
+  return recipes.find((r) => r.id === id) || null;
+}
+
+// חיפוש בעברית — מנרמל ניקוד, גרשיים ואותיות סופיות
+function normalize(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[֑-ׇ]/g, '')
+    .replace(/[׳’'`]/g, '')
+    .replace(/[״"]/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const FINALS = { ך: 'כ', ם: 'מ', ן: 'נ', ף: 'פ', ץ: 'צ' };
+function fold(s) {
+  return normalize(s).replace(/[ךםןףץ]/g, (c) => FINALS[c]);
+}
+
+const SYNONYMS = {
+  צזקייק: 'גבינה',
+  cheesecake: 'גבינה',
+  שוקולד: 'שוקולד קקאו',
+  פרווה: 'ללא חלב',
+  קרם: 'קרם',
+  בצק: 'בצק',
+  טארט: 'טארט בצק פריך',
+  שמרים: 'שמרים מאפה',
+  מרנג: 'מרנג חלבונים',
+  ציפוי: 'ציפוי גלסאז קרם חמאה',
+  קפה: 'קפה אופרה',
+  לימון: 'לימון הדרים',
+};
+
+function haystack(r) {
+  const ing = r.groups.flatMap((g) => g.items.map((i) => i.n)).join(' ');
+  return fold(
+    [r.title, r.sub, r.kind, r.blurb, ing, (r.notes || []).join(' ')].join(' ')
+  );
+}
+
+export function searchRecipes(query) {
+  const q = fold(query);
+  if (!q) return [];
+  const expanded = q
+    .split(' ')
+    .map((w) => fold(SYNONYMS[w] || w))
+    .join(' ');
+  const terms = [...new Set(expanded.split(' ').filter((w) => w.length > 1))];
+
+  return recipes
+    .map((r) => {
+      const hay = haystack(r);
+      const title = fold(r.title + ' ' + r.sub);
+      let score = 0;
+      for (const t of terms) {
+        if (title.includes(t)) score += 10;
+        else if (hay.includes(t)) score += 3;
+        else if (t.length > 3 && hay.includes(t.slice(0, -1))) score += 1;
+      }
+      if (title === q) score += 50;
+      if (r.essential) score += 1;
+      return { recipe: r, score };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.recipe);
+}
+
+export function scaleQty(q, factor) {
+  if (q == null) return null;
+  const v = q * factor;
+  if (v >= 100) return Math.round(v / 5) * 5;
+  if (v >= 20) return Math.round(v);
+  if (v >= 1) return Math.round(v * 10) / 10;
+  return Math.round(v * 100) / 100;
+}
+
+export function videoUrl(recipe) {
+  return (
+    'https://www.youtube.com/results?search_query=' +
+    encodeURIComponent(recipe.video || recipe.title + ' מתכון')
+  );
+}
