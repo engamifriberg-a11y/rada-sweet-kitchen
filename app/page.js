@@ -299,8 +299,10 @@ export default function Home() {
   const [filter, setFilter] = useState('הכול');
   const [now, setNow] = useState(null);
   const [ai, setAi] = useState(null);
+  const [aiErr, setAiErr] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [aiOn, setAiOn] = useState(null);
+  const [aiConfigured, setAiConfigured] = useState(null);
+  const [aiOn, setAiOn] = useState(true);
 
   useEffect(() => {
     setNow(new Date());
@@ -308,17 +310,29 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
-  // בודק פעם אחת אם יצירת מתכונים מופעלת, כדי שהמסך הריק יגיד את האמת
+  // מצב החיבור מגיע מהשרת; הניתוק הוא העדפה של המשתמשת ונשמר בדפדפן
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem('rada-ai');
+      if (saved !== null) setAiOn(saved === 'on');
+    } catch {}
     let alive = true;
     fetch('/api/recipe')
       .then((r) => r.json())
-      .then((d) => alive && setAiOn(!!d?.aiEnabled))
-      .catch(() => alive && setAiOn(false));
+      .then((d) => alive && setAiConfigured(!!d?.aiConfigured))
+      .catch(() => alive && setAiConfigured(false));
     return () => {
       alive = false;
     };
   }, []);
+
+  function toggleAi() {
+    const next = !aiOn;
+    setAiOn(next);
+    try {
+      localStorage.setItem('rada-ai', next ? 'on' : 'off');
+    } catch {}
+  }
 
   const essentials = useMemo(() => recipes.filter((r) => r.essential), []);
   const results = useMemo(() => (submitted ? searchRecipes(submitted) : null), [submitted]);
@@ -329,16 +343,19 @@ export default function Home() {
     const text = q.trim();
     setSubmitted(text);
     setAi(null);
+    setAiErr(null);
     if (!text) return;
     setBusy(true);
     try {
       const res = await fetch('/api/recipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text }),
+        body: JSON.stringify({ query: text, ai: aiOn }),
       });
       const data = await res.json();
       if (data?.ai) setAi(data.ai);
+      if (data?.aiError) setAiErr(data.aiError.message);
+      if (typeof data?.aiConfigured === 'boolean') setAiConfigured(data.aiConfigured);
     } catch {
       /* המאגר המקומי כבר הציג תוצאות */
     } finally {
@@ -350,6 +367,7 @@ export default function Home() {
     setQ('');
     setSubmitted('');
     setAi(null);
+    setAiErr(null);
   }
 
   const visible = (list) => {
@@ -451,6 +469,31 @@ export default function Home() {
               </button>
             )}
           </div>
+
+          {aiConfigured !== null && (
+            <div className={'aibar' + (aiConfigured && aiOn ? ' on' : '')}>
+              <span className="aidot" />
+              <span className="ailabel">
+                {!aiConfigured
+                  ? 'יצירת מתכונים לא מחוברת'
+                  : aiOn
+                    ? 'יצירת מתכונים פעילה — כל בקשה שאינה במאגר תיווצר מחדש'
+                    : 'יצירת מתכונים מנותקת — מחפשת רק במאגר'}
+              </span>
+              {aiConfigured && (
+                <button
+                  type="button"
+                  className={'switch' + (aiOn ? ' on' : '')}
+                  onClick={toggleAi}
+                  role="switch"
+                  aria-checked={aiOn}
+                  aria-label={aiOn ? 'ניתוק יצירת מתכונים' : 'חיבור יצירת מתכונים'}
+                >
+                  <span className="knob" />
+                </button>
+              )}
+            </div>
+          )}
         </form>
 
         {submitted && (
@@ -482,18 +525,26 @@ export default function Home() {
             {!busy && results.length === 0 && !ai && (
               <div className="results-note">
                 <Icon name="search" size={19} className="ri" />
-                {aiOn ? (
+                {aiErr ? (
+                  <span>
+                    <b>לא נמצא במאגר, והיצירה לא הצליחה.</b>
+                    <br />
+                    {aiErr}
+                  </span>
+                ) : aiConfigured && aiOn ? (
                   <span>
                     לא מצאתי את זה במאגר, וגם יצירת המתכון לא החזירה תשובה כרגע. נסי שוב בעוד רגע, או
                     חפשי במילה אחת כמו <b>גבינה</b>, <b>שוקולד</b> או <b>דבש</b>.
                   </span>
                 ) : (
                   <span>
-                    <b>לא נמצא במאגר.</b> כרגע האתר מחפש רק בין {recipes.length} המתכונים שבתוכו.
+                    <b>לא נמצא במאגר.</b> כרגע מחפשים רק בין {recipes.length} המתכונים שבאתר.
                     <br />
-                    כדי שכל בקשה תיצור מתכון חדש בעברית ובגרמים, צריך להפעיל יצירת מתכונים בהגדרות
-                    הפרויקט ב־Vercel (משתנה <b>GEMINI_API_KEY</b>). עד אז — נסי מילה אחת, למשל{' '}
-                    <b>גבינה</b>, <b>שוקולד</b>, <b>לימון</b> או <b>דבש</b>.
+                    {aiConfigured
+                      ? 'יצירת המתכונים מנותקת. אפשר לחבר אותה במתג שמעל, וכל בקשה תיצור מתכון חדש בעברית ובגרמים.'
+                      : 'יצירת מתכונים חדשים אינה מחוברת כרגע.'}{' '}
+                    בינתיים נסי מילה אחת, למשל <b>גבינה</b>, <b>שוקולד</b>, <b>לימון</b> או{' '}
+                    <b>דבש</b>.
                   </span>
                 )}
               </div>
