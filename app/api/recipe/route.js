@@ -165,6 +165,8 @@ export async function GET(request) {
   return Response.json({
     ...base,
     probe: r.text ? 'ok' : r.error,
+    // קוד הסטטוס של Google, לאבחון. אין בו שום חלק מהמפתח.
+    providerStatus: r.status || null,
     message: r.text ? 'המפתח תקין והיצירה פעילה.' : MESSAGES[r.error] || MESSAGES.provider_error,
   });
 }
