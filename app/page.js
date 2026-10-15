@@ -3,7 +3,15 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import PastryArt from './components/PastryArt';
 import Icon, { KIND_ICON } from './components/Icon';
-import { recipes, SECTIONS, getRecipe, searchRecipes, scaleQty, videoUrl } from './data/recipes';
+import {
+  recipes,
+  SECTIONS,
+  getRecipe,
+  searchRecipesDetailed,
+  searchQueryUrls,
+  scaleQty,
+  videoUrl,
+} from './data/recipes';
 
 const FILTERS = [
   { label: 'הכול', icon: 'grid' },
@@ -258,9 +266,18 @@ function Sheet({ id, onClose }) {
             <Icon name="play" size={18} />
             סרטון הדרכה להכנה
           </a>
+          <a
+            className="btn btn-ghost"
+            href={'https://www.google.com/search?q=' + encodeURIComponent(r.title + ' ' + r.sub + ' מתכון')}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Icon name="search" size={18} />
+            חיפוש באינטרנט
+          </a>
           <button className="btn btn-ghost" onClick={() => window.print()}>
             <Icon name="print" size={18} />
-            הדפסת דף עבודה
+            הדפסה
           </button>
         </div>
 
@@ -343,7 +360,13 @@ export default function Home() {
   }
 
   const essentials = useMemo(() => recipes.filter((r) => r.essential), []);
-  const results = useMemo(() => (submitted ? searchRecipes(submitted) : null), [submitted]);
+  const found = useMemo(
+    () => (submitted ? searchRecipesDetailed(submitted) : null),
+    [submitted]
+  );
+  const results = found?.results || [];
+  const confident = !!found?.confident;
+  const links = useMemo(() => searchQueryUrls(submitted), [submitted]);
   const open_ = useCallback((id) => setOpen(id), []);
 
   async function runSearch(e) {
@@ -511,51 +534,34 @@ export default function Home() {
                 <Icon name="search" />
               </span>
               <div>
-                <h2>תוצאות עבור “{submitted}”</h2>
-                <p className="sec-note">{results.length} מתכונים תואמים</p>
+                <h2>“{submitted}”</h2>
+                <p className="sec-note">
+                  {busy
+                    ? 'מחפשת…'
+                    : confident
+                      ? `${results.length} מתכונים תואמים במאגר`
+                      : 'אין התאמה מדויקת במאגר'}
+                </p>
               </div>
             </div>
-            {results.length > 0 && (
-              <div className="grid">
-                {results.map((r) => (
-                  <RecipeCard key={r.id} r={r} onOpen={open_} />
-                ))}
-              </div>
-            )}
 
-            {busy && results.length === 0 && (
+            {/* תמיד זמין — גם כשהמאגר לא מזהה את הבקשה וגם כשהוא טועה */}
+            <div className="online-row">
+              <a className="btn btn-video" href={links.video} target="_blank" rel="noopener noreferrer">
+                <Icon name="play" size={18} />
+                סרטון הדרכה
+              </a>
+              <a className="btn btn-ghost" href={links.web} target="_blank" rel="noopener noreferrer">
+                <Icon name="search" size={18} />
+                חיפוש באינטרנט
+              </a>
+            </div>
+
+            {busy && (
               <p className="results-note">
                 <Icon name="spark" size={19} className="ri" />
                 <span>מחפשת במאגר ומכינה מתכון…</span>
               </p>
-            )}
-
-            {!busy && results.length === 0 && !ai && (
-              <div className="results-note">
-                <Icon name="search" size={19} className="ri" />
-                {aiErr ? (
-                  <span>
-                    <b>לא נמצא במאגר, והיצירה לא הצליחה.</b>
-                    <br />
-                    {aiErr}
-                  </span>
-                ) : aiConfigured && aiOn ? (
-                  <span>
-                    לא מצאתי את זה במאגר, וגם יצירת המתכון לא החזירה תשובה כרגע. נסי שוב בעוד רגע, או
-                    חפשי במילה אחת כמו <b>גבינה</b>, <b>שוקולד</b> או <b>דבש</b>.
-                  </span>
-                ) : (
-                  <span>
-                    <b>לא נמצא במאגר.</b> כרגע מחפשים רק בין {recipes.length} המתכונים שבאתר.
-                    <br />
-                    {aiConfigured
-                      ? 'יצירת המתכונים מנותקת. אפשר לחבר אותה במתג שמעל, וכל בקשה תיצור מתכון חדש בעברית ובגרמים.'
-                      : 'יצירת מתכונים חדשים אינה מחוברת כרגע.'}{' '}
-                    בינתיים נסי מילה אחת, למשל <b>גבינה</b>, <b>שוקולד</b>, <b>לימון</b> או{' '}
-                    <b>דבש</b>.
-                  </span>
-                )}
-              </div>
             )}
 
             {ai && (
@@ -565,7 +571,57 @@ export default function Home() {
                   מתכון שנוצר לבקשתך
                 </h4>
                 {ai}
+                <div className="ai-actions">
+                  <a className="btn btn-video" href={links.video} target="_blank" rel="noopener noreferrer">
+                    <Icon name="play" size={18} />
+                    סרטון הדרכה
+                  </a>
+                  <a className="btn btn-ghost" href={links.web} target="_blank" rel="noopener noreferrer">
+                    <Icon name="search" size={18} />
+                    חיפוש באינטרנט
+                  </a>
+                </div>
               </div>
+            )}
+
+            {!busy && results.length === 0 && !ai && (
+              <div className="results-note">
+                <Icon name="search" size={19} className="ri" />
+                {aiErr ? (
+                  <span>
+                    <b>לא נמצא במאגר, והיצירה לא הצליחה.</b>
+                    <br />
+                    {aiErr} בינתיים אפשר לחפש סרטון או באינטרנט בכפתורים שלמעלה.
+                  </span>
+                ) : (
+                  <span>
+                    <b>לא נמצא במאגר.</b>{' '}
+                    {aiConfigured
+                      ? 'יצירת המתכונים מנותקת — אפשר לחבר אותה במתג שמעל.'
+                      : 'יצירת מתכונים חדשים אינה מחוברת כרגע.'}{' '}
+                    הכפתורים שלמעלה יחפשו סרטון או מתכון באינטרנט.
+                  </span>
+                )}
+              </div>
+            )}
+
+            {results.length > 0 && (
+              <>
+                {!confident && (
+                  <p className="maybe-note">
+                    <Icon name="alert" size={17} />
+                    <span>
+                      לא מצאתי “{submitted}” במאגר. אלה מתכונים שמזכירים חלק מהמילים — ייתכן שאף אחד
+                      מהם אינו מה שחיפשת.
+                    </span>
+                  </p>
+                )}
+                <div className="grid">
+                  {(confident ? results : results.slice(0, 6)).map((r) => (
+                    <RecipeCard key={r.id} r={r} onOpen={open_} />
+                  ))}
+                </div>
+              </>
             )}
           </section>
         )}

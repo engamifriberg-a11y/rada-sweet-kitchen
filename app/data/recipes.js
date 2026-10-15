@@ -106,9 +106,9 @@ function haystack(r) {
   );
 }
 
-export function searchRecipes(query) {
+export function searchRecipesDetailed(query) {
   const q = fold(query);
-  if (!q) return [];
+  if (!q) return { results: [], confident: false };
   const expanded = q
     .split(' ')
     .map((w) => fold(SYNONYMS[w] || w))
@@ -149,7 +149,24 @@ export function searchRecipes(query) {
   const full = scored.filter((x) => x.hits === terms.length);
   const chosen = full.length ? full : scored;
 
-  return chosen.sort((a, b) => b.score - a.score).map((x) => x.recipe);
+  return {
+    results: chosen.sort((a, b) => b.score - a.score).map((x) => x.recipe),
+    // true רק כשמתכון ענה על כל מילות החיפוש. בלי זה התוצאות הן ניחוש,
+    // ואסור להציג אותן כאילו נמצא מה שביקשו.
+    confident: full.length > 0,
+  };
+}
+
+export function searchRecipes(query) {
+  return searchRecipesDetailed(query).results;
+}
+
+export function searchQueryUrls(query) {
+  const q = String(query || '').trim();
+  return {
+    video: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q + ' מתכון הכנה'),
+    web: 'https://www.google.com/search?q=' + encodeURIComponent(q + ' מתכון'),
+  };
 }
 
 export function scaleQty(q, factor) {

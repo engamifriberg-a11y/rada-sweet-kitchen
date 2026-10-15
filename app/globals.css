@@ -592,3 +592,22 @@ footer.foot b { font-family: var(--display); color: var(--accent); font-weight: 
   .aibar { align-items: flex-start; border-radius: var(--r-md); }
   .switch { margin-top: 1px; }
 }
+
+/* ── Online search row + low-confidence notice ── */
+.online-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.online-row .btn { flex: 1; min-width: 160px; text-decoration: none; }
+
+.ai-actions {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--honey) 28%, transparent);
+}
+.ai-actions .btn { flex: 1; min-width: 150px; text-decoration: none; }
+
+.maybe-note {
+  display: flex; align-items: flex-start; gap: 11px;
+  background: var(--pink-soft); border: 1px solid color-mix(in srgb, var(--pink) 32%, transparent);
+  border-radius: var(--r-md); padding: 13px 15px; margin-bottom: 16px;
+  font-size: 13.5px; line-height: 1.6; color: var(--muted);
+}
+.maybe-note svg { color: var(--pink); flex: none; margin-top: 1px; }
