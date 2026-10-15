@@ -56,7 +56,11 @@ async function callGemini({ prompt, maxTokens = 1800, timeoutMs = 15000 }) {
               : 'provider_error';
       // נרשם לוג בלי המפתח ובלי גוף הבקשה
       console.error('Gemini rejected the request', res.status);
-      return { error: code, status: res.status };
+      let detail = null;
+      try {
+        detail = (await res.text()).slice(0, 400);
+      } catch {}
+      return { error: code, status: res.status, detail };
     }
 
     const data = await res.json();
@@ -190,6 +194,8 @@ export async function GET(request) {
     probe: r.text ? 'ok' : r.error,
     // קודי סטטוס של Google לאבחון בלבד. אין בהם שום חלק מהמפתח.
     providerStatus: r.status || null,
+    // הודעת השגיאה של Google עצמה. היא מתארת את הבקשה, לא את המפתח.
+    providerDetail: r.detail || null,
     modelsStatus,
     availableModels: models,
     message: r.text
