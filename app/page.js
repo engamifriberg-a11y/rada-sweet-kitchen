@@ -2,9 +2,16 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import PastryArt from './components/PastryArt';
+import Icon, { KIND_ICON } from './components/Icon';
 import { recipes, SECTIONS, getRecipe, searchRecipes, scaleQty, videoUrl } from './data/recipes';
 
-const FILTERS = ['הכול', 'יסודות', 'עוגות', 'פטיסרי', 'בצקים וקרמים'];
+const FILTERS = [
+  { label: 'הכול', icon: 'grid' },
+  { label: 'יסודות', icon: 'layers' },
+  { label: 'עוגות', icon: 'cake' },
+  { label: 'פטיסרי', icon: 'patisserie' },
+  { label: 'בצקים וקרמים', icon: 'cream' },
+];
 
 const FILTER_MAP = {
   יסודות: ['ספוג', 'קרם', 'מרנג', 'בצק', 'בסיס', 'ציפוי'],
@@ -12,6 +19,8 @@ const FILTER_MAP = {
   פטיסרי: ['פטיסרי', 'מאפה שמרים'],
   'בצקים וקרמים': ['בצק', 'קרם', 'ציפוי'],
 };
+
+const SECTION_ICON = { foundations: 'layers', signature: 'cake' };
 
 function Dots({ n }) {
   return (
@@ -31,7 +40,10 @@ function RecipeCard({ r, onOpen }) {
         <PastryArt name={r.art} />
       </div>
       <div className="rcard-body">
-        <div className="rcard-kind">{r.kind}</div>
+        <div className="rcard-kindrow">
+          <Icon name={KIND_ICON[r.kind] || 'spark'} size={16} />
+          <span>{r.kind}</span>
+        </div>
         <h3>{r.title}</h3>
         <div className="rcard-sub">{r.sub}</div>
         <p className="rcard-blurb">{r.blurb}</p>
@@ -66,16 +78,24 @@ function Sheet({ id, onClose }) {
   const factor = servings / r.baseServings;
   const scaled = Math.abs(factor - 1) > 0.001;
 
+  const specs = [
+    { icon: 'scale', label: 'תפוקה', value: r.yield },
+    { icon: 'thermometer', label: 'תנור', value: r.oven },
+    { icon: 'clock', label: 'הכנה', value: r.times.prep },
+    { icon: 'clock', label: 'אפייה', value: r.times.bake },
+    { icon: 'clock', label: 'המתנה', value: r.times.rest },
+  ];
+
   return (
     <div className="sheet" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="sheet-in">
         <div className="sheet-bar">
           <button className="iconbtn" onClick={onClose} aria-label="סגירה">
-            ✕
+            <Icon name="close" />
           </button>
           <b>{r.title}</b>
-          <button className="iconbtn" onClick={() => window.print()} aria-label="הדפסה" title="הדפסה">
-            ⎙
+          <button className="iconbtn" onClick={() => window.print()} aria-label="הדפסה">
+            <Icon name="print" />
           </button>
         </div>
 
@@ -93,44 +113,36 @@ function Sheet({ id, onClose }) {
         </div>
 
         <div className="specs">
-          <div className="spec">
-            <span>תפוקה</span>
-            <b>{r.yield}</b>
-          </div>
-          <div className="spec">
-            <span>תנור</span>
-            <b>{r.oven}</b>
-          </div>
-          <div className="spec">
-            <span>הכנה</span>
-            <b>{r.times.prep}</b>
-          </div>
-          <div className="spec">
-            <span>אפייה</span>
-            <b>{r.times.bake}</b>
-          </div>
-          <div className="spec">
-            <span>המתנה</span>
-            <b>{r.times.rest}</b>
-          </div>
+          {specs.map((s) => (
+            <div className="spec" key={s.label}>
+              <div className="sh">
+                <Icon name={s.icon} size={15} />
+                <span>{s.label}</span>
+              </div>
+              <b>{s.value}</b>
+            </div>
+          ))}
         </div>
 
         <section className="block">
           <div className="block-h">
+            <span className="bh-icon">
+              <Icon name="list" />
+            </span>
             <h3>מרכיבים</h3>
-            <span className="k">במשקל</span>
+            <span className="k">הכול בגרמים</span>
           </div>
 
           <div className="scaler">
             <span>כמות מנות</span>
-            {scaled && <span style={{ color: 'var(--brass)' }}>×{factor.toFixed(2).replace(/\.?0+$/, '')}</span>}
+            {scaled && <span className="mult">×{factor.toFixed(2).replace(/\.?0+$/, '')}</span>}
             <div className="scaler-ctl">
               <button onClick={() => setServings((s) => Math.max(1, s - 1))} aria-label="פחות">
-                −
+                <Icon name="minus" size={18} />
               </button>
               <b>{servings}</b>
               <button onClick={() => setServings((s) => Math.min(200, s + 1))} aria-label="יותר">
-                +
+                <Icon name="plus" size={18} />
               </button>
             </div>
           </div>
@@ -157,6 +169,9 @@ function Sheet({ id, onClose }) {
 
         <section className="block">
           <div className="block-h">
+            <span className="bh-icon">
+              <Icon name="dough" />
+            </span>
             <h3>שלבי העבודה</h3>
           </div>
           <ol className="steps">
@@ -169,11 +184,17 @@ function Sheet({ id, onClose }) {
         {r.notes?.length > 0 && (
           <section className="block">
             <div className="block-h">
+              <span className="bh-icon">
+                <Icon name="spark" />
+              </span>
               <h3>הערות מקצועיות</h3>
             </div>
             <ul className="notes">
               {r.notes.map((n, i) => (
-                <li key={i}>{n}</li>
+                <li key={i}>
+                  <Icon name="spark" size={17} className="ni" />
+                  <span>{n}</span>
+                </li>
               ))}
             </ul>
           </section>
@@ -182,13 +203,19 @@ function Sheet({ id, onClose }) {
         {r.fixes?.length > 0 && (
           <section className="block">
             <div className="block-h">
+              <span className="bh-icon">
+                <Icon name="alert" />
+              </span>
               <h3>מה השתבש</h3>
-              <span className="k">אבחון</span>
+              <span className="k">אבחון מהיר</span>
             </div>
             <div className="fix">
               {r.fixes.map((f, i) => (
                 <div className="fix-row" key={i}>
-                  <div className="fix-p">{f.p}</div>
+                  <div className="fix-p">
+                    <Icon name="alert" size={17} className="fi" />
+                    {f.p}
+                  </div>
                   <div className="fix-c">הסיבה: {f.c}</div>
                   <div className="fix-f">
                     <b>תיקון:</b> {f.f}
@@ -202,11 +229,15 @@ function Sheet({ id, onClose }) {
         {r.allergens?.length > 0 && (
           <section className="block">
             <div className="block-h">
+              <span className="bh-icon">
+                <Icon name="leaf" />
+              </span>
               <h3>אלרגנים</h3>
             </div>
             <div className="tags">
               {r.allergens.map((a) => (
                 <span className="tag" key={a}>
+                  <Icon name="leaf" size={14} />
                   {a}
                 </span>
               ))}
@@ -216,16 +247,48 @@ function Sheet({ id, onClose }) {
 
         <div className="cta-row">
           <a className="btn btn-video" href={videoUrl(r)} target="_blank" rel="noopener noreferrer">
-            ▶ סרטון הדרכה להכנה
+            <Icon name="play" size={18} />
+            סרטון הדרכה להכנה
           </a>
           <button className="btn btn-ghost" onClick={() => window.print()}>
-            ⎙ הדפסת דף עבודה
+            <Icon name="print" size={18} />
+            הדפסת דף עבודה
           </button>
         </div>
 
         <div className="sheet-end" />
       </div>
     </div>
+  );
+}
+
+function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    let saved = null;
+    try {
+      saved = localStorage.getItem('rada-theme');
+    } catch {}
+    const prefers = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    const isDark = saved ? saved === 'dark' : !!prefers;
+    setDark(isDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }, []);
+
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    try {
+      localStorage.setItem('rada-theme', next ? 'dark' : 'light');
+    } catch {}
+  }
+
+  return (
+    <button className="iconbtn" onClick={toggle} aria-label={dark ? 'מצב בהיר' : 'מצב כהה'}>
+      <Icon name={dark ? 'sun' : 'moon'} size={19} />
+    </button>
   );
 }
 
@@ -245,9 +308,7 @@ export default function Home() {
   }, []);
 
   const essentials = useMemo(() => recipes.filter((r) => r.essential), []);
-
   const results = useMemo(() => (submitted ? searchRecipes(submitted) : null), [submitted]);
-
   const open_ = useCallback((id) => setOpen(id), []);
 
   async function runSearch(e) {
@@ -266,7 +327,7 @@ export default function Home() {
       const data = await res.json();
       if (data?.ai) setAi(data.ai);
     } catch {
-      /* המאגר המקומי כבר הציג תוצאות — אין צורך בהודעת שגיאה */
+      /* המאגר המקומי כבר הציג תוצאות */
     } finally {
       setBusy(false);
     }
@@ -290,15 +351,10 @@ export default function Home() {
         <div className="topbar-in">
           <div className="brand">
             <div className="brand-mark">
-              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M3.5 20h17v-4.6c0-2.9-3.8-4.9-8.5-4.9s-8.5 2-8.5 4.9V20Z" fill="#F3D9E4" />
-                <path d="M3.5 16.2c1.6 1.2 2.9-1 4.3 0 1.4 1 2.8-1.1 4.2 0 1.4 1.1 2.8-1 4.2 0 1.4 1 2.6-1.1 4.3 0" stroke="#E0C183" strokeWidth="1.1" fill="none" strokeLinecap="round" />
-                <path d="M12 9.6V5.6" stroke="#E3A8C0" strokeWidth="1.5" strokeLinecap="round" />
-                <circle cx="12" cy="4.3" r="1.7" fill="#E0C183" />
-              </svg>
+              <Icon name="cake" size={23} />
             </div>
             <div>
-              <div className="brand-name">Rada</div>
+              <div className="brand-name">המטבח המתוק של ראדה</div>
               <div className="brand-sub">PÂTISSERIE</div>
             </div>
           </div>
@@ -306,7 +362,6 @@ export default function Home() {
           <div className="clock">
             {now
               ? new Intl.DateTimeFormat('he-IL', {
-                  weekday: 'short',
                   day: 'numeric',
                   month: 'short',
                   hour: '2-digit',
@@ -315,14 +370,18 @@ export default function Home() {
                 }).format(now)
               : ''}
           </div>
+          <ThemeToggle />
         </div>
       </div>
 
       <main className="wrap">
         <header className="hero">
-          <div className="eyebrow">כלי עבודה לקונדיטורית</div>
+          <span className="kicker">
+            <Icon name="spark" size={16} />
+            כלי עבודה לקונדיטורית
+          </span>
           <h1>
-            מטבח הקונדיטוריה של <em>רדה</em>
+            המטבח המתוק של <em>ראדה</em>
           </h1>
           <p className="hero-lead">
             מתכונים במשקל, טמפרטורות מדויקות, זמנים, אבחון תקלות וסרטוני הדרכה. מהיסודות שחייבים להיות
@@ -342,49 +401,56 @@ export default function Home() {
               <span>בגרמים</span>
             </div>
           </div>
-          <div className="piping" aria-hidden="true" />
         </header>
 
         <form className="search-shell" onSubmit={runSearch}>
           <div className="search-row">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="מה מכינים היום? עוגת גבינה, קרם פטיסייר, גלסאז׳…"
-              maxLength={300}
-              aria-label="חיפוש מתכון"
-            />
+            <div className="search-field">
+              <Icon name="search" size={19} />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="מה מכינים היום?"
+                maxLength={300}
+                aria-label="חיפוש מתכון"
+              />
+            </div>
             <button className="btn btn-primary" type="submit" disabled={busy}>
               {busy ? 'מחפשת…' : 'חיפוש'}
             </button>
           </div>
           <div className="chips">
-            <span className="chips-label">סינון</span>
             {FILTERS.map((f) => (
               <button
-                key={f}
+                key={f.label}
                 type="button"
-                className={'chip' + (filter === f ? ' on' : '')}
-                onClick={() => setFilter(f)}
+                className={'chip' + (filter === f.label ? ' on' : '')}
+                onClick={() => setFilter(f.label)}
               >
-                {f}
+                <Icon name={f.icon} size={15} />
+                {f.label}
               </button>
             ))}
             {submitted && (
               <button type="button" className="chip" onClick={clear}>
-                ✕ ניקוי חיפוש
+                <Icon name="close" size={14} />
+                ניקוי
               </button>
             )}
           </div>
         </form>
 
         {submitted && (
-          <section className="sec" style={{ marginTop: 32 }}>
+          <section className="sec" style={{ marginTop: 34 }}>
             <div className="sec-head">
-              <span className="sec-num">?</span>
-              <h2>תוצאות עבור “{submitted}”</h2>
+              <span className="sec-icon">
+                <Icon name="search" />
+              </span>
+              <div>
+                <h2>תוצאות עבור “{submitted}”</h2>
+                <p className="sec-note">{results.length} מתכונים תואמים</p>
+              </div>
             </div>
-            <div className="ornament"><i /></div>
             {results.length > 0 ? (
               <div className="grid">
                 {results.map((r) => (
@@ -393,13 +459,19 @@ export default function Home() {
               </div>
             ) : (
               <p className="results-note">
-                אין התאמה במאגר. נסי מילה אחת — למשל <b>גבינה</b>, <b>שוקולד</b>, <b>לימון</b>,{' '}
-                <b>קרם</b>, <b>בצק</b> או <b>מרנג</b>.
+                <Icon name="search" size={19} className="ri" />
+                <span>
+                  אין התאמה במאגר. נסי מילה אחת — למשל <b>גבינה</b>, <b>שוקולד</b>, <b>לימון</b>,{' '}
+                  <b>קרם</b>, <b>בצק</b> או <b>מרנג</b>.
+                </span>
               </p>
             )}
             {ai && (
               <div className="ai-card">
-                <h4>מתכון מותאם</h4>
+                <h4>
+                  <Icon name="spark" size={16} />
+                  מתכון מותאם
+                </h4>
                 {ai}
               </div>
             )}
@@ -410,8 +482,11 @@ export default function Home() {
           <>
             <div className="band">
               <div className="band-top">
+                <span className="band-icon">
+                  <Icon name="bookmark" size={21} />
+                </span>
                 <h2>בשליפה</h2>
-                <span className="band-tag">ה־{essentials.length} שחייבים לדעת בעל פה</span>
+                <span className="band-tag">{essentials.length} מתכונים</span>
               </div>
               <p>
                 אלה המתכונים שכל עוגה נשענת עליהם. מי שיודע אותם בעל פה מרכיב כל עוגה בלי מתכון — רק
@@ -420,26 +495,32 @@ export default function Home() {
               <div className="band-grid">
                 {essentials.map((r) => (
                   <button key={r.id} className="band-item" onClick={() => open_(r.id)}>
-                    <b>{r.title}</b>
-                    <span>{r.kind}</span>
+                    <span className="bi">
+                      <Icon name={KIND_ICON[r.kind] || 'spark'} size={17} />
+                    </span>
+                    <span>
+                      <b>{r.title}</b>
+                      <span>{r.kind}</span>
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {SECTIONS.map((sec, i) => {
+            {SECTIONS.map((sec) => {
               const list = visible(sec.ids.map(getRecipe).filter(Boolean));
               if (!list.length) return null;
               return (
                 <section className="sec" key={sec.id}>
                   <div className="sec-head">
-                    <span className="sec-num">{i + 1}</span>
+                    <span className="sec-icon">
+                      <Icon name={SECTION_ICON[sec.id] || 'grid'} />
+                    </span>
                     <div>
                       <h2>{sec.label}</h2>
                       <p className="sec-note">{sec.note}</p>
                     </div>
                   </div>
-                  <div className="ornament"><i /></div>
                   <div className="grid">
                     {list.map((r) => (
                       <RecipeCard key={r.id} r={r} onOpen={open_} />
@@ -452,8 +533,8 @@ export default function Home() {
         )}
 
         <footer className="foot">
-          <b>Rada — מטבח הקונדיטוריה</b>
-          <div style={{ marginTop: 6 }}>© 2026 כל הזכויות שמורות לרדה פרייברג</div>
+          <b>המטבח המתוק של ראדה</b>
+          <div>© 2026 כל הזכויות שמורות לרדה פרייברג</div>
         </footer>
       </main>
 
