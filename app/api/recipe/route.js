@@ -1,4 +1,4 @@
-import { searchRecipes, recipes } from '../../data/recipes';
+import { searchRecipesDetailed, recipes } from '../../data/recipes';
 
 export const runtime = 'nodejs';
 
@@ -150,8 +150,51 @@ const MESSAGES = {
   network_error: 'לא ניתן להגיע לשירות היצירה.',
   empty_response: 'השירות החזיר תשובה ריקה.',
   truncated: 'התשובה נקטעה. נסי בקשה קצרה וממוקדת יותר.',
+  rate_limited_local: 'יותר מדי בקשות יצירה בזמן קצר. נסי שוב בעוד דקה.',
+  daily_cap: 'נוצלה מכסת היצירה היומית של האתר. המאגר והחיפוש באינטרנט עובדים כרגיל.',
   not_hebrew: 'השירות החזיר תשובה שאינה בעברית.',
 };
+
+/**
+ * מגן על המפתח של בעל האתר.
+ * האתר ציבורי, ולכן כל אחד עם הקישור יכול להפעיל יצירה על חשבונו.
+ * מגבלה לפי כתובת IP ותקרה יומית כוללת.
+ *
+ * הערה: בסביבה ללא שרת כל מופע סופר לעצמו, ולכן זו הגנה סבירה מפני
+ * שימוש יתר מקרי — לא חומה מפני תוקף נחוש. לחסימה אמיתית צריך מאגר משותף.
+ */
+const PER_IP_PER_HOUR = 12;
+const PER_INSTANCE_PER_DAY = 300;
+
+const ipHits = new Map();
+let dayStamp = null;
+let dayCount = 0;
+
+function takeQuota(request) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (dayStamp !== today) {
+    dayStamp = today;
+    dayCount = 0;
+    ipHits.clear();
+  }
+  if (dayCount >= PER_INSTANCE_PER_DAY) return { ok: false, reason: 'daily_cap' };
+
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
+
+  const now = Date.now();
+  const hits = (ipHits.get(ip) || []).filter((t) => now - t < 3600000);
+  if (hits.length >= PER_IP_PER_HOUR) {
+    ipHits.set(ip, hits);
+    return { ok: false, reason: 'rate_limited_local' };
+  }
+  hits.push(now);
+  ipHits.set(ip, hits);
+  dayCount++;
+  return { ok: true };
+}
 
 function brief(r) {
   return {
@@ -184,14 +227,32 @@ export async function POST(request) {
   if (query.length > 300)
     return Response.json({ error: 'הבקשה ארוכה מדי — עד 300 תווים' }, { status: 400 });
 
-  const matches = searchRecipes(query).slice(0, 8);
+  const { results, confident } = searchRecipesDetailed(query);
+  const matches = results.slice(0, 8);
 
   let ai = null;
   let aiError = null;
-  if (wantAi && hasKey()) {
-    const r = await callGemini({ prompt: query });
-    if (r.text) ai = r.text;
-    else aiError = { code: r.error, message: MESSAGES[r.error] || MESSAGES.provider_error };
+  let aiSkipped = null;
+
+  // שלושה תנאים לפני שמוציאים קריאה בתשלום על חשבון בעל המפתח:
+  // המשתמשת לא ניתקה, יש מפתח, והמאגר לא כבר ענה על הבקשה.
+  if (!wantAi) {
+    aiSkipped = 'disconnected';
+  } else if (!hasKey()) {
+    aiSkipped = 'not_configured';
+  } else if (confident) {
+    // המאגר מצא התאמה אמיתית — אין סיבה לשלם על יצירה
+    aiSkipped = 'local_match';
+  } else {
+    const gate = takeQuota(request);
+    if (!gate.ok) {
+      aiSkipped = gate.reason;
+      aiError = { code: gate.reason, message: MESSAGES[gate.reason] };
+    } else {
+      const r = await callGemini({ prompt: query });
+      if (r.text) ai = r.text;
+      else aiError = { code: r.error, message: MESSAGES[r.error] || MESSAGES.provider_error };
+    }
   }
 
   return Response.json({
@@ -199,8 +260,10 @@ export async function POST(request) {
     matches: matches.map(brief),
     count: matches.length,
     total: recipes.length,
+    confident,
     ai,
     aiError,
+    aiSkipped,
     aiConfigured: hasKey(),
   });
 }
