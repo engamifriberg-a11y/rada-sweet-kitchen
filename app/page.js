@@ -20,7 +20,7 @@ const FILTER_MAP = {
   'בצקים וקרמים': ['בצק', 'קרם', 'ציפוי'],
 };
 
-const SECTION_ICON = { foundations: 'layers', signature: 'cake' };
+const SECTION_ICON = { foundations: 'layers', everyday: 'cream', signature: 'cake' };
 
 function Dots({ n }) {
   return (
@@ -300,11 +300,24 @@ export default function Home() {
   const [now, setNow] = useState(null);
   const [ai, setAi] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [aiOn, setAiOn] = useState(null);
 
   useEffect(() => {
     setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(t);
+  }, []);
+
+  // בודק פעם אחת אם יצירת מתכונים מופעלת, כדי שהמסך הריק יגיד את האמת
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/recipe')
+      .then((r) => r.json())
+      .then((d) => alive && setAiOn(!!d?.aiEnabled))
+      .catch(() => alive && setAiOn(false));
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const essentials = useMemo(() => recipes.filter((r) => r.essential), []);
@@ -451,26 +464,46 @@ export default function Home() {
                 <p className="sec-note">{results.length} מתכונים תואמים</p>
               </div>
             </div>
-            {results.length > 0 ? (
+            {results.length > 0 && (
               <div className="grid">
                 {results.map((r) => (
                   <RecipeCard key={r.id} r={r} onOpen={open_} />
                 ))}
               </div>
-            ) : (
+            )}
+
+            {busy && results.length === 0 && (
               <p className="results-note">
-                <Icon name="search" size={19} className="ri" />
-                <span>
-                  אין התאמה במאגר. נסי מילה אחת — למשל <b>גבינה</b>, <b>שוקולד</b>, <b>לימון</b>,{' '}
-                  <b>קרם</b>, <b>בצק</b> או <b>מרנג</b>.
-                </span>
+                <Icon name="spark" size={19} className="ri" />
+                <span>מחפשת במאגר ומכינה מתכון…</span>
               </p>
             )}
+
+            {!busy && results.length === 0 && !ai && (
+              <div className="results-note">
+                <Icon name="search" size={19} className="ri" />
+                {aiOn ? (
+                  <span>
+                    לא מצאתי את זה במאגר, וגם יצירת המתכון לא החזירה תשובה כרגע. נסי שוב בעוד רגע, או
+                    חפשי במילה אחת כמו <b>גבינה</b>, <b>שוקולד</b> או <b>דבש</b>.
+                  </span>
+                ) : (
+                  <span>
+                    <b>לא נמצא במאגר.</b> כרגע האתר מחפש רק בין {recipes.length} המתכונים שבתוכו.
+                    <br />
+                    כדי שכל בקשה תיצור מתכון חדש בעברית ובגרמים, צריך להפעיל יצירת מתכונים בהגדרות
+                    הפרויקט ב־Vercel (משתנה <b>GEMINI_API_KEY</b>). עד אז — נסי מילה אחת, למשל{' '}
+                    <b>גבינה</b>, <b>שוקולד</b>, <b>לימון</b> או <b>דבש</b>.
+                  </span>
+                )}
+              </div>
+            )}
+
             {ai && (
               <div className="ai-card">
                 <h4>
                   <Icon name="spark" size={16} />
-                  מתכון מותאם
+                  מתכון שנוצר לבקשתך
                 </h4>
                 {ai}
               </div>

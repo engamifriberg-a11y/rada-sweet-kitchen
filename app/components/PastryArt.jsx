@@ -662,6 +662,354 @@ const ART = {
       </g>
     </>
   ),
+
+  honey: () => (
+    <>
+      <Plate w={280} />
+      <Slice
+        x={118}
+        w={164}
+        layers={[{ h: 86, c: '#6B3E1E', tex: 'pa-crumb-dark' }]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x} ${ty + 4} Q${x + w / 2} ${ty - 20} ${x + w} ${ty + 4} Z`} fill="#5A3317" />
+            <path d={`M${x + w / 2 - 26} ${ty - 10} q26 -8 52 2`} stroke="#3F2210" strokeWidth="4" fill="none" strokeLinecap="round" />
+          </>
+        )}
+      />
+      <g opacity=".85">
+        <path d="M296 70 q16 -6 24 6 q-8 20 -24 16 q-12 -12 0 -22 Z" fill="#D79A2E" />
+        <path d="M300 96 q8 14 18 2" stroke="#B87E1E" strokeWidth="3" fill="none" strokeLinecap="round" />
+      </g>
+    </>
+  ),
+
+  apple: () => (
+    <>
+      <Plate />
+      <Slice
+        layers={[
+          { h: 16, c: '#D4A05E' },
+          { h: 40, c: '#E8C98C' },
+          { h: 14, c: '#D4A05E' },
+        ]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x} ${ty} h${w} v-7 q-${w / 2} -7 -${w} 0 Z`} fill="#C78F45" />
+            <path d={`M${x + 34} ${ty - 5} v-6 M${x + w / 2} ${ty - 7} v-6 M${x + w - 34} ${ty - 5} v-6`} stroke="#A06F2E" strokeWidth="3" strokeLinecap="round" />
+          </>
+        )}
+      />
+      <g>
+        {[...Array(9)].map((_, i) => (
+          <path
+            key={i}
+            d={`M${120 + (i % 5) * 32} ${166 + Math.floor(i / 5) * 18} q14 -9 26 0 q-13 7 -26 0 Z`}
+            fill="#EFD9A8"
+            stroke="#C99A4E"
+            strokeWidth="1.4"
+          />
+        ))}
+      </g>
+      <g transform="translate(306 92)">
+        <path d="M0 6 q-12 -14 0 -16 q6 -6 12 0 q12 2 0 16 q-6 8 -12 0 Z" fill="#B23A3A" />
+        <path d="M6 -11 v-6" stroke="#5E3B1E" strokeWidth="2.4" strokeLinecap="round" />
+      </g>
+    </>
+  ),
+
+  babka: () => (
+    <>
+      <Plate w={290} />
+      <g>
+        <rect x="112" y="108" width="176" height="100" rx="12" fill="#E0B071" />
+        <rect x="112" y="108" width="176" height="100" rx="12" fill="url(#pa-crumb)" opacity=".35" />
+        {[0, 1].map((k) => (
+          <g key={k} transform={`translate(${k * 88} 0)`}>
+            <path
+              d="M126 200 q-6 -32 14 -44 q20 -12 14 -32 q-4 -14 10 -18"
+              fill="none"
+              stroke="#3E2214"
+              strokeWidth="11"
+              strokeLinecap="round"
+            />
+            <path
+              d="M150 200 q-6 -30 12 -40 q18 -10 12 -30"
+              fill="none"
+              stroke="#3E2214"
+              strokeWidth="9"
+              strokeLinecap="round"
+            />
+          </g>
+        ))}
+        <rect x="112" y="108" width="176" height="100" rx="12" fill="url(#pa-sheen)" opacity=".4" />
+        <path d="M112 112 q88 -14 176 0" fill="none" stroke="#F0CE96" strokeWidth="4" opacity=".8" />
+      </g>
+    </>
+  ),
+
+  marble: () => (
+    <>
+      <Plate w={280} />
+      <Slice
+        x={118}
+        w={164}
+        layers={[{ h: 90, c: '#F0D79C', tex: 'pa-crumb' }]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x} ${ty + 3} Q${x + w / 2} ${ty - 18} ${x + w} ${ty + 3} Z`} fill="#E6C684" />
+            <path d={`M${x + 40} ${ty - 8} q40 -8 84 2`} stroke="#CFA85F" strokeWidth="4" fill="none" strokeLinecap="round" />
+          </>
+        )}
+      />
+      <g>
+        <path d="M128 190 q28 -26 56 -8 q28 18 56 -10" fill="none" stroke="#5A3420" strokeWidth="13" strokeLinecap="round" opacity=".92" />
+        <path d="M130 152 q30 -24 58 -4 q26 18 52 -12" fill="none" stroke="#5A3420" strokeWidth="10" strokeLinecap="round" opacity=".92" />
+        <path d="M134 122 q28 -18 54 -2 q24 14 50 -8" fill="none" stroke="#5A3420" strokeWidth="7" strokeLinecap="round" opacity=".85" />
+      </g>
+    </>
+  ),
+
+  brownie: () => (
+    <>
+      <Plate w={270} />
+      <g>
+        <rect x="122" y="126" width="156" height="80" rx="7" fill="#3C2016" />
+        <rect x="122" y="126" width="156" height="80" rx="7" fill="url(#pa-crumb-dark)" />
+        <rect x="122" y="126" width="156" height="13" rx="6" fill="#6B4430" />
+        <rect x="122" y="126" width="156" height="13" rx="6" fill="url(#pa-sheen)" opacity=".9" />
+        <path d="M138 132 q22 6 40 -2 q22 8 44 -2 q16 6 32 -1" fill="none" stroke="#C7A88E" strokeWidth="2" opacity=".75" />
+        <g opacity=".9">
+          {[...Array(7)].map((_, i) => (
+            <rect key={i} x={134 + ((i * 47) % 128)} y={152 + ((i * 29) % 44)} width="11" height="9" rx="2" fill="#23120C" />
+          ))}
+        </g>
+        {[...Array(5)].map((_, i) => (
+          <circle key={'s' + i} cx={140 + i * 30} cy={130} r="1.8" fill="#fff" opacity=".7" />
+        ))}
+      </g>
+    </>
+  ),
+
+  coldcheese: () => (
+    <>
+      <Plate />
+      <Slice
+        layers={[
+          { h: 17, c: C.crustDark },
+          { h: 58, c: '#FDFAF2' },
+          { h: 12, c: '#C2304F' },
+        ]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x} ${ty} q${w * 0.25} 7 ${w * 0.5} 0 q${w * 0.25} -7 ${w * 0.5} 0 v-3 h-${w} Z`} fill="#A82540" />
+            {[...Array(4)].map((_, i) => (
+              <circle key={i} cx={x + 26 + i * 44} cy={ty - 8} r="8" fill="#C2304F" />
+            ))}
+            {[...Array(4)].map((_, i) => (
+              <circle key={'h' + i} cx={x + 23 + i * 44} cy={ty - 11} r="3" fill="#fff" opacity=".4" />
+            ))}
+          </>
+        )}
+      />
+      <rect x="110" y="120" width="180" height="88" fill="url(#pa-sheen)" opacity=".4" />
+    </>
+  ),
+
+  tiramisu: () => (
+    <>
+      <Plate w={290} />
+      <Slice
+        x={112}
+        w={176}
+        layers={[
+          { h: 16, c: '#C79A66' },
+          { h: 24, c: '#FBF3DE' },
+          { h: 16, c: '#C79A66' },
+          { h: 26, c: '#FBF3DE' },
+        ]}
+        top={(ty, x, w) => (
+          <>
+            <rect x={x} y={ty - 9} width={w} height="9" rx="2" fill="#4A3121" />
+            <rect x={x} y={ty - 9} width={w} height="9" rx="2" fill="url(#pa-crumb-dark)" opacity=".6" />
+            {[...Array(16)].map((_, i) => (
+              <circle key={i} cx={x + 6 + ((i * 53) % (w - 12))} cy={ty - 12 - ((i * 19) % 5)} r="1.3" fill="#6B4A32" opacity=".8" />
+            ))}
+          </>
+        )}
+      />
+      <g opacity=".55">
+        {[...Array(10)].map((_, i) => (
+          <circle key={i} cx={122 + ((i * 61) % 156)} cy={152 + ((i * 37) % 44)} r="1.6" fill="#8A6A48" />
+        ))}
+      </g>
+    </>
+  ),
+
+  pavlova: () => (
+    <>
+      <Plate w={280} />
+      <g>
+        <path d="M112 204 q-6 -58 36 -70 q52 -14 104 0 q42 12 36 70 Z" fill={C.white} />
+        <path d="M112 204 q-6 -58 36 -70 q52 -14 104 0 q42 12 36 70 Z" fill="url(#pa-sheen)" opacity=".75" />
+        <path d="M150 196 q4 -34 -2 -52 M200 200 q4 -38 0 -58 M250 196 q-4 -34 2 -52" stroke="#E6DCC8" strokeWidth="3" fill="none" strokeLinecap="round" opacity=".7" />
+        <path d="M132 136 q34 -16 68 -6 q34 10 68 4 q-10 16 -34 14 q-34 -10 -68 0 q-24 6 -34 -12 Z" fill="#FFFDF8" />
+        <g>
+          <circle cx="170" cy="124" r="11" fill="#9C2748" />
+          <circle cx="200" cy="116" r="12" fill="#C2304F" />
+          <circle cx="232" cy="124" r="10" fill="#7E1F3C" />
+          <circle cx="166" cy="120" r="3.6" fill="#fff" opacity=".45" />
+          <circle cx="196" cy="111" r="4" fill="#fff" opacity=".45" />
+        </g>
+        <path d="M150 112 q10 -10 20 -2" stroke="#E8B93C" strokeWidth="4" fill="none" strokeLinecap="round" opacity=".8" />
+      </g>
+    </>
+  ),
+
+  rugelach: () => (
+    <>
+      <Plate w={260} />
+      <g>
+        <path d="M94 176 q22 -52 84 -56 q64 -4 94 48 q-26 -18 -56 -12 q-20 -26 -54 -16 q-34 8 -46 42 q-12 -10 -22 -6 Z" fill="#D89E55" />
+        <path d="M94 176 q22 -52 84 -56 q64 -4 94 48 q-26 -18 -56 -12 q-20 -26 -54 -16 q-34 8 -46 42 q-12 -10 -22 -6 Z" fill="url(#pa-sheen)" opacity=".6" />
+        <path d="M140 160 q24 -34 62 -28 q32 6 46 28" fill="none" stroke="#45271A" strokeWidth="9" strokeLinecap="round" opacity=".9" />
+        <path d="M122 172 q30 -46 78 -40" fill="none" stroke="#45271A" strokeWidth="6" strokeLinecap="round" opacity=".7" />
+        <ellipse cx="200" cy="186" rx="112" ry="10" fill="#C08A42" opacity=".4" />
+        <g opacity=".75">
+          {[...Array(9)].map((_, i) => (
+            <circle key={i} cx={120 + i * 20} cy={118 + ((i * 23) % 10)} r="1.6" fill="#fff" />
+          ))}
+        </g>
+      </g>
+    </>
+  ),
+
+  sufganiya: () => (
+    <>
+      <Plate w={250} />
+      <g>
+        <circle cx="200" cy="138" r="66" fill="#D99A4E" />
+        <circle cx="200" cy="138" r="66" fill="url(#pa-crumb)" opacity=".3" />
+        <path d="M134 138 a66 66 0 0 0 132 0 a66 66 0 0 0 -132 0" fill="none" stroke="#EFCB92" strokeWidth="13" opacity=".9" />
+        <circle cx="200" cy="138" r="66" fill="url(#pa-sheen)" opacity=".5" />
+        <circle cx="200" cy="120" r="13" fill="#B22A46" />
+        <circle cx="196" cy="116" r="4" fill="#fff" opacity=".35" />
+        <g opacity=".92">
+          {[...Array(22)].map((_, i) => (
+            <circle key={i} cx={146 + ((i * 71) % 108)} cy={96 + ((i * 41) % 34)} r={1.4 + ((i * 7) % 3) * 0.5} fill="#fff" />
+          ))}
+        </g>
+      </g>
+    </>
+  ),
+
+  cookie: () => (
+    <>
+      <Plate w={250} />
+      <g>
+        <ellipse cx="200" cy="158" rx="86" ry="44" fill="#D5A05C" />
+        <ellipse cx="200" cy="152" rx="86" ry="44" fill="#E2B069" />
+        <ellipse cx="200" cy="152" rx="86" ry="44" fill="url(#pa-crumb)" opacity=".4" />
+        <ellipse cx="200" cy="152" rx="70" ry="33" fill="#EFC487" opacity=".55" />
+        <g>
+          {[
+            [168, 134],
+            [218, 128],
+            [242, 156],
+            [190, 166],
+            [146, 160],
+            [214, 172],
+          ].map(([cx, cy], i) => (
+            <g key={i}>
+              <ellipse cx={cx} cy={cy} rx="13" ry="9" fill="#3C2016" />
+              <ellipse cx={cx - 3} cy={cy - 3} rx="4.5" ry="2.6" fill="#6B4430" opacity=".8" />
+            </g>
+          ))}
+        </g>
+        <ellipse cx="200" cy="152" rx="86" ry="44" fill="url(#pa-sheen)" opacity=".35" />
+        <g opacity=".9">
+          {[...Array(5)].map((_, i) => (
+            <rect key={i} x={160 + i * 20} y={120 + ((i * 13) % 8)} width="3" height="3" rx="1" fill="#fff" transform={`rotate(${i * 30} ${161 + i * 20} ${121 + ((i * 13) % 8)})`} />
+          ))}
+        </g>
+      </g>
+    </>
+  ),
+
+  banana: () => (
+    <>
+      <Plate w={280} />
+      <Slice
+        x={118}
+        w={164}
+        layers={[{ h: 84, c: '#DFBB7E', tex: 'pa-crumb' }]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x} ${ty + 3} Q${x + w / 2} ${ty - 16} ${x + w} ${ty + 3} Z`} fill="#CFA660" />
+            <path d={`M${x + 24} ${ty - 6} q56 -12 116 0 q-10 12 -58 12 q-48 0 -58 -12 Z`} fill="#E9CC8E" />
+            <path d={`M${x + 42} ${ty - 4} q40 -8 80 0`} stroke="#B98F4E" strokeWidth="3" fill="none" strokeLinecap="round" />
+          </>
+        )}
+      />
+      <g opacity=".85">
+        {[...Array(7)].map((_, i) => (
+          <ellipse key={i} cx={132 + ((i * 67) % 136)} cy={150 + ((i * 31) % 44)} rx="6" ry="4" fill="#B5873F" transform={`rotate(${i * 27} ${132 + ((i * 67) % 136)} ${150 + ((i * 31) % 44)})`} />
+        ))}
+      </g>
+    </>
+  ),
+
+  malabi: () => (
+    <>
+      <Plate w={210} y={216} />
+      <g>
+        <path d="M148 86 h104 l-10 112 q-2 14 -16 14 h-52 q-14 0 -16 -14 Z" fill="#F4F0E6" opacity=".45" />
+        <path d="M152 120 h96 l-8 78 q-1 10 -12 10 h-56 q-11 0 -12 -10 Z" fill="#FBF7EE" />
+        <path d="M152 120 h96 l-2 20 q-46 8 -92 0 Z" fill="#E8DFC8" />
+        <path d="M152 120 h96 l-1.4 14 q-47 9 -93 0 Z" fill="#C2304F" />
+        <ellipse cx="200" cy="120" rx="48" ry="9" fill="#D4425F" />
+        <path d="M148 86 h104 l-10 112 q-2 14 -16 14 h-52 q-14 0 -16 -14 Z" fill="none" stroke="#D8D0C0" strokeWidth="3" />
+        <g>
+          {[...Array(8)].map((_, i) => (
+            <ellipse key={i} cx={166 + i * 10} cy={114 + ((i * 17) % 7)} rx="4.2" ry="3" fill={C.pistachio} transform={`rotate(${i * 34} ${166 + i * 10} ${114 + ((i * 17) % 7)})`} />
+          ))}
+        </g>
+        <path d="M156 128 q6 44 4 62" stroke="#fff" strokeWidth="4" fill="none" opacity=".55" strokeLinecap="round" />
+      </g>
+    </>
+  ),
+
+  lemoncake: () => (
+    <>
+      <Plate w={280} />
+      <Slice
+        x={118}
+        w={164}
+        layers={[{ h: 84, c: '#F3DC9E', tex: 'pa-crumb' }]}
+        top={(ty, x, w) => (
+          <>
+            <path d={`M${x} ${ty + 3} Q${x + w / 2} ${ty - 16} ${x + w} ${ty + 3} Z`} fill="#EBCF86" />
+            <path
+              d={`M${x - 3} ${ty - 1} Q${x + w / 2} ${ty - 21} ${x + w + 3} ${ty - 1} q-6 12 -14 4 q-8 14 -18 2 q-10 16 -20 2 q-12 16 -22 1 q-12 15 -22 0 q-10 13 -20 -1 q-8 10 -14 -7 Z`}
+              fill="#FBFAF4"
+            />
+            <path
+              d={`M${x - 3} ${ty - 1} Q${x + w / 2} ${ty - 21} ${x + w + 3} ${ty - 1} q-6 12 -14 4 q-8 14 -18 2 q-10 16 -20 2 q-12 16 -22 1 q-12 15 -22 0 q-10 13 -20 -1 q-8 10 -14 -7 Z`}
+              fill="url(#pa-sheen)"
+              opacity=".7"
+            />
+          </>
+        )}
+      />
+      <g transform="translate(300 104)">
+        <circle cx="0" cy="0" r="21" fill={C.lemonLight} />
+        <circle cx="0" cy="0" r="16" fill="#FBEBA8" />
+        {[...Array(7)].map((_, i) => (
+          <path key={i} d={`M0 0 L${Math.cos((i / 7) * 6.28) * 15} ${Math.sin((i / 7) * 6.28) * 15}`} stroke="#E8C85C" strokeWidth="1.5" />
+        ))}
+      </g>
+    </>
+  ),
 };
 
 export default function PastryArt({ name, className = '', tall = false }) {

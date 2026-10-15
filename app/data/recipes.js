@@ -1,7 +1,8 @@
 import { foundations } from './foundations';
 import { cakes } from './cakes';
+import { israeli } from './israeli';
 
-export const recipes = [...foundations, ...cakes];
+export const recipes = [...foundations, ...israeli, ...cakes];
 
 export const SECTIONS = [
   {
@@ -9,6 +10,12 @@ export const SECTIONS = [
     label: 'יסודות הקונדיטור',
     note: 'מה שחייב להיות בשליפה כשמכינים עוגות',
     ids: foundations.map((r) => r.id),
+  },
+  {
+    id: 'everyday',
+    label: 'הקלאסיקות של הבית',
+    note: 'מה שמכינים פה בפועל — מעוגת דבש ועד בבקה',
+    ids: israeli.map((r) => r.id),
   },
   {
     id: 'signature',
