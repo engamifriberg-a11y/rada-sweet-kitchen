@@ -58,8 +58,8 @@ keyPassword=…
 
 1. להעלות את `versionCode` ו־`versionName` ב־`app/build.gradle`.
 2. לבנות ולחתום.
-3. להעלות את הקובץ לאחסון, ולעדכן באתר את משתני הסביבה
-   `APK_URL`, `APK_VERSION`, `APK_SIZE` ו־`APK_UPDATED`.
+3. להעלות את הקובץ לאחסון ה־Blob הפרטי של הפרויקט, ולעדכן באתר את משתני הסביבה
+   `APK_VERSION`, `APK_SIZE`, `APK_PATH` ו־`APK_UPDATED`.
 
 הנתיב `/api/apk` באתר קורא את המשתנים האלה, כך שאפשר לפרסם גרסה חדשה
 בלי לפרוס מחדש את האתר.
