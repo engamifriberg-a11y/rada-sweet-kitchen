@@ -5,6 +5,8 @@ import { france } from './france';
 import { europe } from './europe';
 import { americas } from './americas';
 import { levant } from './levant';
+import { breads } from './breads';
+import { chocolate } from './chocolate';
 
 export const recipes = [
   ...foundations,
@@ -14,6 +16,8 @@ export const recipes = [
   ...europe,
   ...americas,
   ...levant,
+  ...breads,
+  ...chocolate,
 ];
 
 export const SECTIONS = [
@@ -58,6 +62,18 @@ export const SECTIONS = [
     label: 'אסיה והמזרח',
     note: 'יפן, הלבנט וישראל',
     ids: levant.map((r) => r.id),
+  },
+  {
+    id: 'breads',
+    label: 'לחמים ובצקי שמרים',
+    note: 'מחלה ומחמצת ועד פוקצ׳ה, פיתות ובצק דני',
+    ids: breads.map((r) => r.id),
+  },
+  {
+    id: 'chocolate',
+    label: 'עבודת שוקולד',
+    note: 'מהטמפרור ועד טראפלס, פרלינים וממרחים',
+    ids: chocolate.map((r) => r.id),
   },
 ];
 
@@ -109,11 +125,25 @@ function haystack(r) {
 export function searchRecipesDetailed(query, list) {
   const q = fold(query);
   if (!q) return { results: [], confident: false };
-  const expanded = q
-    .split(' ')
-    .map((w) => fold(SYNONYMS[w] || w))
-    .join(' ');
-  const terms = [...new Set(expanded.split(' ').filter((w) => w.length > 1))];
+
+  /**
+   * כל מילה בחיפוש היא דרישה אחת, שאפשר לספק אותה גם דרך מילה נרדפת.
+   *
+   * קודם המילים הנרדפות נוספו לרשימת המילים הנדרשות, ואז חיפוש "סלמי
+   * שוקולד" דרש גם "קקאו" — ולכן המתכון ששמו בדיוק "סלמי שוקולד" לא
+   * נחשב התאמה מלאה. מילה נרדפת היא עזרה, לא תנאי.
+   */
+  const terms = [];
+  const seen = new Set();
+  for (const w of q.split(' ')) {
+    if (w.length < 2 || seen.has(w)) continue;
+    seen.add(w);
+    const alts = fold(SYNONYMS[w] || '')
+      .split(' ')
+      .filter((a) => a.length > 1 && a !== w);
+    terms.push({ w, alts });
+  }
+  if (!terms.length) return { results: [], confident: false };
 
   const scored = (list || recipes)
     .map((r) => {
@@ -121,24 +151,35 @@ export function searchRecipesDetailed(query, list) {
       const title = fold(r.title + ' ' + r.sub);
       let score = 0;
       let hits = 0;
+
       for (const t of terms) {
-        if (title.includes(t)) {
+        if (title.includes(t.w)) {
           score += 10;
           hits++;
-        } else if (hay.includes(t)) {
+        } else if (hay.includes(t.w)) {
           score += 3;
           hits++;
-        } else if (t.length >= 5 && hay.includes(t.slice(0, -1))) {
+        } else if (t.w.length >= 5 && hay.includes(t.w.slice(0, -1))) {
+          // ריבוי או צורת נטייה קרובה
           score += 1;
+          hits++;
+        } else if (t.alts.some((a) => title.includes(a))) {
+          score += 4;
+          hits++;
+        } else if (t.alts.some((a) => hay.includes(a))) {
+          score += 2;
           hits++;
         }
       }
+
       // בלי התאמה אמיתית אין תוצאה. בונוס "בשליפה" ניתן רק למתכון שכבר נמצא.
       if (hits === 0) return { recipe: r, score: 0 };
-      // דרישת כיסוי: בחיפוש של כמה מילים, מתכון שענה רק על מילה אחת מתוך שלוש ומעלה יורד
+      // דרישת כיסוי: בחיפוש של שלוש מילים ומעלה, התאמה למילה אחת היא רעש
       if (terms.length >= 3 && hits === 1) return { recipe: r, score: 0 };
+
       score += hits * 2;
       if (title === q) score += 50;
+      if (fold(r.title) === q) score += 40;
       if (r.essential) score += 1;
       return { recipe: r, score, hits };
     })

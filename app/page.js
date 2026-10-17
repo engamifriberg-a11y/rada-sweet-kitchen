@@ -19,13 +19,19 @@ const FILTERS = [
   { label: 'יסודות', icon: 'layers' },
   { label: 'עוגות', icon: 'cake' },
   { label: 'פטיסרי', icon: 'patisserie' },
+  { label: 'לחמים', icon: 'wheat' },
+  { label: 'שוקולד', icon: 'ganache' },
 ];
 
 const FILTER_MAP = {
   יסודות: ['ספוג', 'קרם', 'מרנג', 'בצק', 'בסיס', 'ציפוי'],
   עוגות: ['עוגה'],
-  פטיסרי: ['פטיסרי', 'מאפה שמרים'],
+  פטיסרי: ['פטיסרי'],
 };
+
+// שתי הקבוצות האלה חוצות סוגים (שוקולד הוא גם קרם, גם בסיס וגם עוגה),
+// ולכן הן מסוננות לפי השתייכות למקטע ולא לפי שדה הסוג
+const SECTION_FILTER = { לחמים: 'breads', שוקולד: 'chocolate' };
 
 const SECTION_ICON = {
   foundations: 'layers',
@@ -35,6 +41,8 @@ const SECTION_ICON = {
   europe: 'meringue',
   americas: 'glaze',
   levant: 'base',
+  breads: 'wheat',
+  chocolate: 'ganache',
 };
 
 function Dots({ n }) {
@@ -212,6 +220,13 @@ export default function Home() {
       if (filter === 'הכול') return list;
       if (filter === 'המועדפים שלי') return list.filter((r) => lib.data.favorites.includes(r.id));
       if (filter === 'המתכונים שלי') return list.filter((r) => r.mine || r.edited);
+
+      const secId = SECTION_FILTER[filter];
+      if (secId) {
+        const ids = new Set(SECTIONS.find((s) => s.id === secId)?.ids || []);
+        return list.filter((r) => ids.has(r.id));
+      }
+
       const kinds = FILTER_MAP[filter] || [];
       return list.filter((r) => kinds.includes(r.kind));
     },
