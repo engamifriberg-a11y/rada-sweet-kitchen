@@ -42,6 +42,14 @@ export default function BackupPanel({ lib, onClose }) {
         </div>
 
         <div className="block" style={{ marginTop: 20 }}>
+          <div className="whoami">
+            <span className="userchip big">{(lib.user?.username || '?').slice(0, 2)}</span>
+            <div>
+              <b>{lib.user?.username}</b>
+              <span>החשבון שפתוח כרגע</span>
+            </div>
+          </div>
+
           <div className="mystats">
             <div>
               <b>{mine}</b>
@@ -77,9 +85,9 @@ export default function BackupPanel({ lib, onClose }) {
           <div className="backup-note">
             <Icon name="alert" size={18} className="ri" />
             <span>
-              הכל נשמר <b>בדפדפן הזה בלבד</b> — אף אחד אחר לא יכול לראות או לשנות את העבודה שלך.
-              המחיר הוא שהיא לא עוברת מעצמה למכשיר אחר, ושניקוי נתוני הדפדפן ימחק אותה. ייצאי גיבוי
-              מדי פעם.
+              העבודה שלך נשמרת <b>בחשבון שלך</b> ומסונכרנת בין המכשירים — אפשר להיכנס מהטלפון
+              ומהמחשב ולראות את אותם מתכונים. משתמשים אחרים אינם רואים אותם. עותק נשמר גם במכשיר,
+              כדי שהאפליקציה תעבוד גם בלי רשת. גיבוי לקובץ נשאר הדרך לשמור עותק מחוץ לשירות.
             </span>
           </div>
 

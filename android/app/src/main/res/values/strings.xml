@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">המטבח של ראדה</string>
+    <string name="pick_backup">בחירת קובץ גיבוי</string>
+    <string name="saved_to_downloads">הגיבוי נשמר בתיקיית ההורדות: %1$s</string>
+    <string name="save_failed">שמירת הגיבוי נכשלה</string>
+    <string name="print_failed">ההדפסה אינה זמינה במכשיר הזה</string>
+    <string name="no_browser">לא נמצא דפדפן לפתיחת הקישור</string>
+</resources>

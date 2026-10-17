@@ -1,55 +1,72 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { recipes as builtIn, scaleQty } from '../data/recipes';
 
 /**
- * הספרייה האישית של רדה.
+ * הספרייה האישית של המשתמש המחובר.
  *
- * הכל נשמר בדפדפן שלה בלבד. זו החלטה מכוונת: האתר ציבורי וללא התחברות,
- * ולכן נתונים בשרת היו פתוחים לעריכה ולמחיקה בידי כל מי שיש לו את הקישור.
- * המחיר הוא שהמידע חי בדפדפן אחד — ולכן יש ייצוא וייבוא לקובץ.
+ * מקור האמת הוא השרת, והדפדפן מחזיק עותק מקומי כדי שהאפליקציה תיפתח
+ * מיד ותעבוד גם בלי רשת. העותק נשמר תחת מפתח שכולל את מזהה המשתמש,
+ * כך ששני משתמשים על אותו מכשיר לא רואים זה את נתוני זה.
  */
 
-const KEY = 'rada-library-v1';
+const LEGACY_KEY = 'rada-library-v1';
+const cacheKey = (userId) => `rada-lib-${userId}`;
 
-const EMPTY = {
-  custom: {}, // מתכונים שרדה כתבה
-  edits: {}, // שינויים על מתכונים מובנים
-  hidden: [], // מתכונים מובנים שהוסתרו
-  videos: {}, // קישור סרטון משלה לכל מתכון
-  notes: {}, // הערות אישיות
-  favorites: [], // הרפרטואר שלה
-  checks: {}, // סימוני וי במצב מטבח
-  cart: [], // רשימת קניות: [{ id, servings }]
+export const EMPTY = {
+  custom: {},
+  edits: {},
+  hidden: [],
+  videos: {},
+  notes: {},
+  favorites: [],
+  checks: {},
+  cart: [],
 };
 
-function read() {
-  if (typeof window === 'undefined') return EMPTY;
+function readCache(key) {
+  if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return EMPTY;
-    return { ...EMPTY, ...JSON.parse(raw) };
+    const raw = localStorage.getItem(key);
+    return raw ? { ...EMPTY, ...JSON.parse(raw) } : null;
   } catch {
-    return EMPTY;
+    return null;
   }
 }
 
-function write(data) {
+function writeCache(key, data) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(data));
+    localStorage.setItem(key, JSON.stringify(data));
     return true;
   } catch {
-    // מכסת האחסון מלאה — עדיף לדעת מאשר לאבד בשקט
     return false;
   }
+}
+
+/** נתונים שנשמרו לפני שהיו חשבונות, שממתינים להעלאה */
+export function readLegacy() {
+  const d = readCache(LEGACY_KEY);
+  if (!d) return null;
+  const count =
+    Object.keys(d.custom || {}).length +
+    Object.keys(d.edits || {}).length +
+    Object.keys(d.notes || {}).length +
+    Object.keys(d.videos || {}).length +
+    (d.favorites || []).length;
+  return count > 0 ? { data: d, count } : null;
+}
+
+export function clearLegacy() {
+  try {
+    localStorage.removeItem(LEGACY_KEY);
+  } catch {}
 }
 
 export function newRecipeId() {
   return 'my-' + Date.now().toString(36);
 }
 
-/** שלד ריק למתכון חדש */
 export function blankRecipe() {
   return {
     id: newRecipeId(),
@@ -74,7 +91,6 @@ export function blankRecipe() {
   };
 }
 
-/** איורים שרדה יכולה לבחור מהם, עם שמות בעברית */
 export const ART_CHOICES = [
   ['genoise', 'חתך ספוג'],
   ['chocsponge', 'חתך שוקולד'],
@@ -108,15 +124,9 @@ export const ART_CHOICES = [
   ['brigadeiro', 'כדורים'],
 ];
 
-/** ממזג מתכון מובנה עם השינויים שרדה עשתה עליו */
 function applyEdit(base, edit) {
   if (!edit) return base;
-  return {
-    ...base,
-    ...edit,
-    times: { ...base.times, ...(edit.times || {}) },
-    edited: true,
-  };
+  return { ...base, ...edit, times: { ...base.times, ...(edit.times || {}) }, edited: true };
 }
 
 export function buildLibrary(data) {
@@ -129,7 +139,6 @@ export function buildLibrary(data) {
   return out;
 }
 
-/** הסרטון של רדה גובר על ברירת המחדל */
 export function resolveVideo(recipe, data) {
   const own = data?.videos?.[recipe.id];
   if (own) {
@@ -147,8 +156,7 @@ export function hasOwnVideo(recipe, data) {
   return Boolean(data?.videos?.[recipe.id]);
 }
 
-/* ── מחשבון תבניות ───────────────────────────
-   היחס הוא יחס שטח, בהנחה שגובה התבנית דומה. */
+/* ── מחשבון תבניות ─────────────────────── */
 export function panArea(pan) {
   if (!pan) return 0;
   if (pan.shape === 'round') {
@@ -165,8 +173,7 @@ export function panFactor(from, to) {
   return b / a;
 }
 
-/* ── רשימת קניות ─────────────────────────────
-   מאחדת שורות זהות ומסכמת כמויות באותה יחידה. */
+/* ── רשימת קניות ───────────────────────── */
 function normName(s) {
   return String(s || '')
     .toLowerCase()
@@ -180,7 +187,6 @@ function normName(s) {
 export function buildShoppingList(cart, library) {
   const lines = new Map();
   const missing = [];
-
   for (const entry of cart) {
     const r = library.find((x) => x.id === entry.id);
     if (!r) {
@@ -202,33 +208,157 @@ export function buildShoppingList(cart, library) {
       }
     }
   }
-
-  const items = [...lines.values()].sort((a, b) => b.q - a.q);
-  return { items, missing };
+  return { items: [...lines.values()].sort((a, b) => b.q - a.q), missing };
 }
 
 export function shoppingListText(list) {
   return list.items.map((i) => `☐ ${Math.round(i.q * 10) / 10} ${i.u} — ${i.n}`).join('\n');
 }
 
-/* ── ה־hook ──────────────────────────────── */
+/* ── ה־hook ────────────────────────────── */
+
 export function useLibrary() {
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const [data, setData] = useState(EMPTY);
   const [ready, setReady] = useState(false);
-  const [full, setFull] = useState(false);
+  const [sync, setSync] = useState('idle'); // idle | saving | offline | error
+  const [storageFull, setStorageFull] = useState(false);
+
+  const timer = useRef(null);
+  const pending = useRef(null);
+  const userRef = useRef(null);
+
+  /* שומר בשרת, עם המתנה קצרה כדי לא לשלוח בקשה על כל הקלדה */
+  const push = useCallback(async (payload) => {
+    const u = userRef.current;
+    if (!u) return;
+    setSync('saving');
+    try {
+      const res = await fetch('/api/library', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: payload }),
+      });
+      if (res.status === 401) {
+        // ההתחברות פגה
+        setUser(null);
+        userRef.current = null;
+        setSync('error');
+        return;
+      }
+      setSync(res.ok ? 'idle' : 'error');
+    } catch {
+      // אין רשת — העותק המקומי נשמר וינסה שוב בשינוי הבא
+      setSync('offline');
+    }
+  }, []);
+
+  const schedule = useCallback(
+    (payload) => {
+      pending.current = payload;
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        timer.current = null;
+        const p = pending.current;
+        pending.current = null;
+        if (p) push(p);
+      }, 1000);
+    },
+    [push]
+  );
+
+  /* שמירה מיידית כשעוזבים את הדף, כדי שלא יאבד שינוי אחרון */
+  useEffect(() => {
+    const flush = () => {
+      if (!pending.current || !userRef.current) return;
+      const body = JSON.stringify({ data: pending.current });
+      pending.current = null;
+      // keepalive מאפשר לבקשה להסתיים גם אחרי שהדף נסגר
+      try {
+        fetch('/api/library', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+          keepalive: true,
+        });
+      } catch {}
+    };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flush();
+    });
+    return () => window.removeEventListener('pagehide', flush);
+  }, []);
+
+  /* טעינה: מצב ההתחברות, ואז מטמון מקומי להצגה מיידית, ואז השרת */
+  const load = useCallback(async () => {
+    let me = null;
+    try {
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      const j = await res.json();
+      me = j?.user || null;
+    } catch {
+      // אין רשת: אם יש התחברות קודמת שמורה, ממשיכים ממנה
+      try {
+        const saved = localStorage.getItem('rada-user');
+        if (saved) me = JSON.parse(saved);
+      } catch {}
+    }
+
+    setUser(me);
+    userRef.current = me;
+    setAuthReady(true);
+
+    if (!me) {
+      setData(EMPTY);
+      setReady(true);
+      return;
+    }
+
+    try {
+      localStorage.setItem('rada-user', JSON.stringify(me));
+    } catch {}
+
+    const cached = readCache(cacheKey(me.id));
+    if (cached) setData(cached);
+    setReady(true);
+
+    try {
+      const res = await fetch('/api/library', { cache: 'no-store' });
+      if (res.ok) {
+        const j = await res.json();
+        const fresh = { ...EMPTY, ...(j.data || {}) };
+        setData(fresh);
+        writeCache(cacheKey(me.id), fresh);
+        setSync('idle');
+      } else if (res.status === 401) {
+        setUser(null);
+        userRef.current = null;
+      }
+    } catch {
+      setSync('offline');
+    }
+  }, []);
 
   useEffect(() => {
-    setData(read());
-    setReady(true);
-  }, []);
+    load();
+  }, [load]);
 
-  const update = useCallback((fn) => {
-    setData((prev) => {
-      const next = fn(prev);
-      if (!write(next)) setFull(true);
-      return next;
-    });
-  }, []);
+  const update = useCallback(
+    (fn) => {
+      setData((prev) => {
+        const next = fn(prev);
+        const u = userRef.current;
+        if (u) {
+          if (!writeCache(cacheKey(u.id), next)) setStorageFull(true);
+          schedule(next);
+        }
+        return next;
+      });
+    },
+    [schedule]
+  );
 
   const library = useMemo(() => buildLibrary(data), [data]);
 
@@ -236,15 +366,69 @@ export function useLibrary() {
     () => ({
       data,
       ready,
-      storageFull: full,
+      user,
+      authReady,
+      sync,
+      storageFull,
       library,
+
+      async login(username, password) {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error || 'ההתחברות נכשלה.');
+        await load();
+        return j.user;
+      },
+
+      async register(username, password, code) {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, code }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error || 'ההרשמה נכשלה.');
+        await load();
+        return j.user;
+      },
+
+      async logout() {
+        try {
+          await fetch('/api/auth/logout', { method: 'POST' });
+        } catch {}
+        const u = userRef.current;
+        // ניקוי העותק המקומי: במכשיר משותף אסור שהנתונים יישארו אחרי יציאה
+        try {
+          if (u) localStorage.removeItem(cacheKey(u.id));
+          localStorage.removeItem('rada-user');
+        } catch {}
+        setUser(null);
+        userRef.current = null;
+        setData(EMPTY);
+      },
+
+      /** מעלה נתונים שנשמרו בדפדפן לפני שהיו חשבונות */
+      async importLegacy(legacy) {
+        update((d) => ({
+          ...d,
+          custom: { ...d.custom, ...(legacy.custom || {}) },
+          edits: { ...d.edits, ...(legacy.edits || {}) },
+          videos: { ...d.videos, ...(legacy.videos || {}) },
+          notes: { ...d.notes, ...(legacy.notes || {}) },
+          hidden: [...new Set([...d.hidden, ...(legacy.hidden || [])])],
+          favorites: [...new Set([...d.favorites, ...(legacy.favorites || [])])],
+        }));
+      },
 
       saveRecipe(recipe) {
         update((d) => {
           if (recipe.mine || d.custom[recipe.id]) {
             return { ...d, custom: { ...d.custom, [recipe.id]: { ...recipe, mine: true } } };
           }
-          // מתכון מובנה — שומרים רק את השינוי, כדי שעדכון המאגר לא ידרוס אותו
           return { ...d, edits: { ...d.edits, [recipe.id]: recipe } };
         });
       },
@@ -313,10 +497,7 @@ export function useLibrary() {
       },
 
       addToCart(id, servings) {
-        update((d) => {
-          const without = d.cart.filter((c) => c.id !== id);
-          return { ...d, cart: [...without, { id, servings }] };
-        });
+        update((d) => ({ ...d, cart: [...d.cart.filter((c) => c.id !== id), { id, servings }] }));
       },
 
       removeFromCart(id) {
@@ -330,13 +511,12 @@ export function useLibrary() {
       exportAll() {
         const payload = {
           app: 'rada-sweet-kitchen',
-          version: 1,
+          version: 2,
+          user: user?.username || null,
           exportedAt: new Date().toISOString(),
           data,
         };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], {
-          type: 'application/json',
-        });
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -345,7 +525,6 @@ export function useLibrary() {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       },
 
-      /** מייבא גיבוי. מוסיף ולא מוחק — עדיף כפילות מאשר אובדן. */
       async importFile(file) {
         const text = await file.text();
         let parsed;
@@ -378,7 +557,7 @@ export function useLibrary() {
         return added;
       },
     }),
-    [data, ready, full, library, update]
+    [data, ready, user, authReady, sync, storageFull, library, update, load]
   );
 
   return api;

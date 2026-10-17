@@ -8,7 +8,8 @@ import RecipeEditor from './components/RecipeEditor';
 import ShoppingList from './components/ShoppingList';
 import BackupPanel from './components/BackupPanel';
 import { SECTIONS, searchRecipesDetailed, searchQueryUrls } from './data/recipes';
-import { useLibrary } from './lib/library';
+import { useLibrary, readLegacy, clearLegacy } from './lib/library';
+import LoginScreen from './components/LoginScreen';
 
 const FILTERS = [
   { label: 'הכול', icon: 'grid' },
@@ -120,12 +121,19 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [aiConfigured, setAiConfigured] = useState(null);
   const [aiOn, setAiOn] = useState(true);
+  const [legacy, setLegacy] = useState(null);
+  const [menu, setMenu] = useState(false);
 
   useEffect(() => {
     setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(t);
   }, []);
+
+  // מתכונים שנשמרו בדפדפן לפני שהיו חשבונות
+  useEffect(() => {
+    if (lib.user && lib.ready) setLegacy(readLegacy());
+  }, [lib.user, lib.ready]);
 
   useEffect(() => {
     try {
@@ -222,6 +230,17 @@ export default function Home() {
     sectionLists.every((s) => s.list.length === 0) &&
     visible(myRecipes).length === 0;
 
+  if (!lib.authReady) {
+    return (
+      <div className="boot">
+        <Icon name="cake" size={34} />
+        <span>טוען…</span>
+      </div>
+    );
+  }
+
+  if (!lib.user) return <LoginScreen lib={lib} />;
+
   return (
     <>
       <div className="topbar">
@@ -259,6 +278,55 @@ export default function Home() {
             <Icon name="bookmark" size={19} />
           </button>
           <ThemeToggle />
+          <div className="usermenu">
+            <button
+              className="userchip"
+              onClick={() => setMenu((m) => !m)}
+              aria-label="החשבון שלי"
+              aria-expanded={menu}
+            >
+              {lib.user.username.slice(0, 2)}
+            </button>
+            {menu && (
+              <>
+                <div className="menu-veil" onClick={() => setMenu(false)} />
+                <div className="menu">
+                  <div className="menu-head">
+                    <b>{lib.user.username}</b>
+                    <span>
+                      {lib.sync === 'saving'
+                        ? 'שומר…'
+                        : lib.sync === 'offline'
+                          ? 'אין רשת — נשמר במכשיר'
+                          : lib.sync === 'error'
+                            ? 'השמירה נכשלה'
+                            : 'הכול שמור'}
+                    </span>
+                  </div>
+                  <button
+                    className="menu-item"
+                    onClick={() => {
+                      setMenu(false);
+                      setPanel('backup');
+                    }}
+                  >
+                    <Icon name="bookmark" size={17} />
+                    העבודה שלי
+                  </button>
+                  <button
+                    className="menu-item danger"
+                    onClick={() => {
+                      setMenu(false);
+                      lib.logout();
+                    }}
+                  >
+                    <Icon name="close" size={17} />
+                    יציאה מהחשבון
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -357,6 +425,36 @@ export default function Home() {
             </div>
           )}
         </form>
+
+        {legacy && (
+          <div className="legacy">
+            <Icon name="alert" size={20} className="ri" />
+            <div>
+              <b>נמצאו {legacy.count} פריטים שנשמרו במכשיר הזה לפני שהיו חשבונות.</b>
+              <span>להעביר אותם לחשבון שלך? הם יהיו פרטיים לך בלבד.</span>
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={async () => {
+                await lib.importLegacy(legacy.data);
+                clearLegacy();
+                setLegacy(null);
+              }}
+            >
+              העברה
+            </button>
+            <button
+              className="iconbtn"
+              onClick={() => {
+                clearLegacy();
+                setLegacy(null);
+              }}
+              aria-label="התעלמות"
+            >
+              <Icon name="close" size={18} />
+            </button>
+          </div>
+        )}
 
         {submitted && (
           <section className="sec" style={{ marginTop: 34 }}>

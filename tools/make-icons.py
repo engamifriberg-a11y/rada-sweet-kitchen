@@ -134,3 +134,53 @@ rnd.paste(build(512, maskable=True), (0, 0), mask)
 rnd.save(OUT / "round-512.png")
 
 print("wrote", len(list(OUT.glob("*.png"))), "icons to", OUT)
+
+# ── נכסי אנדרואיד ────────────────────────────
+# אייקון מדור קודם לכל צפיפות, ושכבת חזית לאייקון מסתגל (adaptive)
+AND = Path(__file__).resolve().parent.parent / "android" / "app" / "src" / "main" / "res"
+
+LEGACY = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
+FOREGROUND = {"mdpi": 108, "hdpi": 162, "xhdpi": 216, "xxhdpi": 324, "xxxhdpi": 432}
+
+
+def foreground(size):
+    """שקוף לגמרי עם העוגה בלבן, בתוך אזור הבטיחות של אנדרואיד"""
+    c = size * SS
+    layer = Image.new("RGBA", (c, c), (0, 0, 0, 0))
+    white = Image.new("RGBA", (c, c), (255, 255, 255, 255))
+    cm = cake_mask(c, 0.50, dy=-c * 0.005)
+    out = Image.composite(white, layer, cm)
+    return out.resize((size, size), Image.LANCZOS)
+
+
+def round_legacy(size):
+    c = size * SS
+    img = grad(c)
+    out = Image.new("RGBA", (c, c), (0, 0, 0, 0))
+    m = Image.new("L", (c, c), 0)
+    ImageDraw.Draw(m).ellipse([0, 0, c - 1, c - 1], fill=255)
+    out.paste(img, (0, 0), m)
+    white = Image.new("RGBA", (c, c), (255, 255, 255, 255))
+    cm = cake_mask(c, 0.62, dy=-c * 0.01)
+    out = Image.composite(white, out, cm)
+    out.putalpha(Image.composite(m, m, cm))
+    return out.resize((size, size), Image.LANCZOS)
+
+
+for dens, px in LEGACY.items():
+    d = AND / f"mipmap-{dens}"
+    d.mkdir(parents=True, exist_ok=True)
+    build(px).save(d / "ic_launcher.png")
+    round_legacy(px).save(d / "ic_launcher_round.png")
+
+for dens, px in FOREGROUND.items():
+    d = AND / f"mipmap-{dens}"
+    d.mkdir(parents=True, exist_ok=True)
+    foreground(px).save(d / "ic_launcher_foreground.png")
+
+# מסך פתיחה
+sp = AND / "drawable"
+sp.mkdir(parents=True, exist_ok=True)
+build(432).save(sp / "splash_logo.png")
+
+print("wrote android launcher assets to", AND)
