@@ -1048,3 +1048,38 @@ li.done .ing-n, li.done .shop-n { text-decoration: line-through; }
 }
 
 .login-mark.gate { background: linear-gradient(145deg, #5B2AA8, #2E1055); }
+
+/* ── חזרה למסך הראשי ויציאה ───────────────── */
+
+/* שם המותג הוא גם כפתור הבית, ולכן הוא button ולא div */
+button.brand {
+  background: none; border: 0; padding: 0; text-align: right;
+  display: flex; align-items: center; gap: 11px;
+  border-radius: var(--r-md); transition: opacity .15s;
+}
+button.brand:hover { opacity: .78; }
+button.brand:active { transform: scale(.98); }
+
+.home-btn { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 34%, transparent); }
+.home-btn:hover { background: var(--accent-soft); }
+
+.exitbox {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-xl); padding: 26px 24px; margin: auto;
+  max-width: 400px; width: calc(100% - 32px); text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: rise .22s cubic-bezier(.2, .9, .3, 1);
+}
+.exitbox-icon {
+  width: 56px; height: 56px; border-radius: 19px; margin: 0 auto 15px;
+  background: var(--pink-soft); color: var(--pink); display: grid; place-items: center;
+}
+.exitbox h3 { font-size: 19px; letter-spacing: -.3px; }
+.exitbox p { font-size: 13.5px; color: var(--muted); line-height: 1.65; margin-top: 10px; }
+.exitbox-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.exitbox-row .btn { flex: 1; min-width: 140px; }
+
+/* הדיאלוג ממורכז, בניגוד לגיליונות שנפתחים מלמעלה */
+.sheet:has(.exitbox) { align-items: center; }
+
+@media print { .home-btn, .exitbox { display: none !important; } }

@@ -132,6 +132,7 @@ export default function Home() {
   const [aiOn, setAiOn] = useState(true);
   const [legacy, setLegacy] = useState(null);
   const [menu, setMenu] = useState(false);
+  const [exitAsk, setExitAsk] = useState(false);
 
   useEffect(() => {
     setNow(new Date());
@@ -215,6 +216,45 @@ export default function Home() {
     setAiErr(null);
   }
 
+  /** חזרה למסך הראשי: סוגר הכול, מנקה חיפוש וסינון, ועולה למעלה */
+  const goHome = useCallback(() => {
+    setOpen(null);
+    setEditing(null);
+    setPanel(null);
+    setMenu(false);
+    setExitAsk(false);
+    setQ('');
+    setSubmitted('');
+    setAi(null);
+    setAiErr(null);
+    setFilter('הכול');
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {}
+  }, []);
+
+  /**
+   * יציאה מהאפליקציה.
+   * באפליקציית האנדרואיד יש גשר שסוגר את החלון באמת. בדפדפן רגיל
+   * window.close נחסם כשהחלון לא נפתח בקוד, ולכן אם כלום לא קרה
+   * מציעים יציאה מהחשבון במקום להעמיד פנים שהכפתור עבד.
+   */
+  const exitApp = useCallback(() => {
+    setMenu(false);
+    try {
+      if (window.RadaNative?.exitApp) {
+        window.RadaNative.exitApp();
+        return;
+      }
+    } catch {}
+    try {
+      window.close();
+    } catch {}
+    setTimeout(() => {
+      if (!document.hidden) setExitAsk(true);
+    }, 350);
+  }, []);
+
   const visible = useCallback(
     (list) => {
       if (filter === 'הכול') return list;
@@ -236,6 +276,7 @@ export default function Home() {
   const favCount = lib.data.favorites.length;
   const cartCount = lib.data.cart.length;
   const openRecipe = open ? byId(open) : null;
+  const atHome = !submitted && filter === 'הכול' && !panel && !open && !editing;
 
   const sectionLists = SECTIONS.map((sec) => ({
     sec,
@@ -266,7 +307,7 @@ export default function Home() {
     <>
       <div className="topbar">
         <div className="topbar-in">
-          <div className="brand">
+          <button className="brand" onClick={goHome} aria-label="חזרה למסך הראשי">
             <div className="brand-mark">
               <Icon name="cake" size={23} />
             </div>
@@ -274,7 +315,7 @@ export default function Home() {
               <div className="brand-name">המטבח המתוק של ראדה</div>
               <div className="brand-sub">PÂTISSERIE</div>
             </div>
-          </div>
+          </button>
           <div className="topbar-spacer" />
           <div className="clock">
             {now
@@ -287,6 +328,11 @@ export default function Home() {
                 }).format(now)
               : ''}
           </div>
+          {!atHome && (
+            <button className="iconbtn home-btn" onClick={goHome} aria-label="חזרה למסך הראשי">
+              <Icon name="home" size={19} />
+            </button>
+          )}
           <button
             className={'iconbtn' + (cartCount ? ' active' : '')}
             onClick={() => setPanel('cart')}
@@ -324,6 +370,10 @@ export default function Home() {
                             : 'הכול שמור'}
                     </span>
                   </div>
+                  <button className="menu-item" onClick={goHome}>
+                    <Icon name="home" size={17} />
+                    המסך הראשי
+                  </button>
                   <button
                     className="menu-item"
                     onClick={() => {
@@ -341,8 +391,12 @@ export default function Home() {
                       lib.logout();
                     }}
                   >
-                    <Icon name="close" size={17} />
+                    <Icon name="exit" size={17} />
                     יציאה מהחשבון
+                  </button>
+                  <button className="menu-item danger" onClick={exitApp}>
+                    <Icon name="close" size={17} />
+                    סגירת האפליקציה
                   </button>
                 </div>
               </>
@@ -671,6 +725,36 @@ export default function Home() {
       <button className="fab" onClick={() => setEditing('new')} aria-label="מתכון חדש">
         <Icon name="plus" size={24} />
       </button>
+
+      {exitAsk && (
+        <div className="sheet" onClick={(e) => e.target === e.currentTarget && setExitAsk(false)}>
+          <div className="exitbox">
+            <span className="exitbox-icon">
+              <Icon name="exit" size={26} />
+            </span>
+            <h3>הדפדפן לא מרשה לסגור את החלון</h3>
+            <p>
+              סגירה אוטומטית עובדת רק באפליקציה המותקנת. אפשר לסגור את הלשונית ידנית, או לצאת
+              מהחשבון כאן.
+            </p>
+            <div className="exitbox-row">
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setExitAsk(false);
+                  lib.logout();
+                }}
+              >
+                <Icon name="exit" size={18} />
+                יציאה מהחשבון
+              </button>
+              <button className="btn btn-ghost" onClick={() => setExitAsk(false)}>
+                חזרה לאפליקציה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {openRecipe && (
         <RecipeSheet

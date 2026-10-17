@@ -263,6 +263,21 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+        /** כפתור "סגירת האפליקציה" באתר */
+        @JavascriptInterface
+        public void exitApp() {
+            runOnUiThread(() -> finishAndRemoveTask());
+        }
+
+        /** כפתור "המסך הראשי" — נשאר בתוך האפליקציה */
+        @JavascriptInterface
+        public void goHome() {
+            runOnUiThread(() -> {
+                loadFailed = false;
+                web.loadUrl(SITE);
+            });
+        }
+
         /** נקרא מדף הלא־מקוון */
         @JavascriptInterface
         public void retry() {
