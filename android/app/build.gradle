@@ -56,6 +56,23 @@ android {
     }
 }
 
+/*
+ * androidx מושך kotlin-stdlib 1.8.22, ותלות ישנה יותר מושכת איתה את
+ * kotlin-stdlib-jdk7 ו-jdk8 בגרסה 1.6.21. החל מגרסה 1.8 המחלקות של
+ * jdk7/jdk8 נכנסו לתוך kotlin-stdlib עצמו, ולכן שתי הגרסאות יחד
+ * משכפלות עשרות מחלקות ו-checkReleaseDuplicateClasses עוצר את הבנייה.
+ *
+ * יישור כולם לאותה גרסה פותר: בגרסאות החדשות jdk7 ו-jdk8 הן ארכיונים
+ * ריקות שרק מצביעות על kotlin-stdlib, כך שאין מה לשכפל.
+ */
+configurations.configureEach {
+    resolutionStrategy {
+        force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24'
+        force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'
+    }
+}
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.activity:activity:1.9.2'
