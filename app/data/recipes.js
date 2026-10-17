@@ -7,6 +7,7 @@ import { americas } from './americas';
 import { levant } from './levant';
 import { breads } from './breads';
 import { chocolate } from './chocolate';
+import { savory } from './savory';
 
 export const recipes = [
   ...foundations,
@@ -17,6 +18,7 @@ export const recipes = [
   ...americas,
   ...levant,
   ...breads,
+  ...savory,
   ...chocolate,
 ];
 
@@ -70,6 +72,12 @@ export const SECTIONS = [
     ids: breads.map((r) => r.id),
   },
   {
+    id: 'savory',
+    label: 'מאפים מלוחים ופאי',
+    note: 'מבורקסים וסמבוסק ועד קיש, פאי בשר ופאי דלעת',
+    ids: savory.map((r) => r.id),
+  },
+  {
     id: 'chocolate',
     label: 'עבודת שוקולד',
     note: 'מהטמפרור ועד טראפלס, פרלינים וממרחים',
@@ -77,7 +85,7 @@ export const SECTIONS = [
   },
 ];
 
-export const KINDS = ['הכול', 'ספוג', 'קרם', 'מרנג', 'בצק', 'בסיס', 'ציפוי', 'עוגה', 'פטיסרי', 'מאפה שמרים'];
+export const KINDS = ['הכול', 'ספוג', 'קרם', 'מרנג', 'בצק', 'בסיס', 'ציפוי', 'עוגה', 'פטיסרי', 'מאפה שמרים', 'מאפה מלוח', 'פאי'];
 
 export function getRecipe(id) {
   return recipes.find((r) => r.id === id) || null;
@@ -113,6 +121,16 @@ const SYNONYMS = {
   ציפוי: 'ציפוי גלסאז קרם חמאה',
   קפה: 'קפה אופרה',
   לימון: 'לימון הדרים',
+  /**
+   * המפתחות כאן נבדקים מול מילה שכבר עברה קיפול, ולכן אות סופית הופכת
+   * לרגילה: "בורקסים" מגיע לכאן כ"בורקסימ". מפתח עם ם׳ סופית לא ייתפס לעולם.
+   */
+  בורקסימ: 'בורקס',
+  פאימ: 'פאי',
+  קישימ: 'קיש',
+  סמבוסקימ: 'סמבוסק',
+  בצקימ: 'בצק',
+  שמרימ: 'שמרים מאפה',
 };
 
 function haystack(r) {

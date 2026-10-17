@@ -20,6 +20,7 @@ const FILTERS = [
   { label: 'עוגות', icon: 'cake' },
   { label: 'פטיסרי', icon: 'patisserie' },
   { label: 'לחמים', icon: 'wheat' },
+  { label: 'מלוחים ופאי', icon: 'savory' },
   { label: 'שוקולד', icon: 'ganache' },
 ];
 
@@ -31,7 +32,7 @@ const FILTER_MAP = {
 
 // שתי הקבוצות האלה חוצות סוגים (שוקולד הוא גם קרם, גם בסיס וגם עוגה),
 // ולכן הן מסוננות לפי השתייכות למקטע ולא לפי שדה הסוג
-const SECTION_FILTER = { לחמים: 'breads', שוקולד: 'chocolate' };
+const SECTION_FILTER = { לחמים: 'breads', שוקולד: 'chocolate', 'מלוחים ופאי': 'savory' };
 
 const SECTION_ICON = {
   foundations: 'layers',
@@ -42,6 +43,7 @@ const SECTION_ICON = {
   americas: 'glaze',
   levant: 'base',
   breads: 'wheat',
+  savory: 'savory',
   chocolate: 'ganache',
 };
 

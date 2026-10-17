@@ -122,6 +122,18 @@ export const ART_CHOICES = [
   ['knafeh', 'כנאפה'],
   ['baklava', 'שכבות פילו'],
   ['brigadeiro', 'כדורים'],
+  ['boureka', 'בורקס'],
+  ['sambusak', 'סמבוסק'],
+  ['quiche', 'קיש'],
+  ['potpie', 'פאי מכוסה'],
+  ['pumpkinpie', 'פאי קאסטרד'],
+  ['cherrypie', 'פאי סריג'],
+  ['creampie', 'פאי קרם'],
+  ['spanakopita', 'מאפה פילו'],
+  ['coil', 'מאפה ספירלה'],
+  ['jachnun', 'גלילי בצק'],
+  ['bagel', 'בייגל'],
+  ['roughpuff', 'בצק עלים'],
 ];
 
 function applyEdit(base, edit) {
