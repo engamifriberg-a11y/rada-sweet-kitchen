@@ -7,6 +7,7 @@ import RecipeSheet from './components/RecipeSheet';
 import RecipeEditor from './components/RecipeEditor';
 import ShoppingList from './components/ShoppingList';
 import BackupPanel from './components/BackupPanel';
+import InstallPanel from './components/InstallPanel';
 import { SECTIONS, searchRecipesDetailed, searchQueryUrls } from './data/recipes';
 import { useLibrary, readLegacy, clearLegacy } from './lib/library';
 import LoginScreen from './components/LoginScreen';
@@ -122,7 +123,7 @@ export default function Home() {
 
   const [open, setOpen] = useState(null);
   const [editing, setEditing] = useState(null); // recipe | 'new' | null
-  const [panel, setPanel] = useState(null); // 'cart' | 'backup' | null
+  const [panel, setPanel] = useState(null); // 'cart' | 'backup' | 'install' | null
   const [q, setQ] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [filter, setFilter] = useState('הכול');
@@ -135,6 +136,7 @@ export default function Home() {
   const [legacy, setLegacy] = useState(null);
   const [menu, setMenu] = useState(false);
   const [exitAsk, setExitAsk] = useState(false);
+  const [closeFailed, setCloseFailed] = useState(false);
 
   useEffect(() => {
     setNow(new Date());
@@ -236,13 +238,11 @@ export default function Home() {
   }, []);
 
   /**
-   * יציאה מהאפליקציה.
-   * באפליקציית האנדרואיד יש גשר שסוגר את החלון באמת. בדפדפן רגיל
-   * window.close נחסם כשהחלון לא נפתח בקוד, ולכן אם כלום לא קרה
-   * מציעים יציאה מהחשבון במקום להעמיד פנים שהכפתור עבד.
+   * סגירת החלון עצמו. באפליקציית האנדרואיד יש גשר שסוגר אותה באמת;
+   * בדפדפן רגיל window.close נחסם כשהחלון לא נפתח בקוד, ולכן אם כלום
+   * לא קרה אומרים את זה במקום להעמיד פנים שהכפתור עבד.
    */
-  const exitApp = useCallback(() => {
-    setMenu(false);
+  const closeWindow = useCallback(() => {
     try {
       if (window.RadaNative?.exitApp) {
         window.RadaNative.exitApp();
@@ -253,7 +253,7 @@ export default function Home() {
       window.close();
     } catch {}
     setTimeout(() => {
-      if (!document.hidden) setExitAsk(true);
+      if (!document.hidden) setCloseFailed(true);
     }, 350);
   }, []);
 
@@ -336,6 +336,14 @@ export default function Home() {
             </button>
           )}
           <button
+            className="iconbtn exit-btn"
+            onClick={() => setExitAsk(true)}
+            aria-label="יציאה"
+            title="יציאה"
+          >
+            <Icon name="exit" size={19} />
+          </button>
+          <button
             className={'iconbtn' + (cartCount ? ' active' : '')}
             onClick={() => setPanel('cart')}
             aria-label="רשימת קניות"
@@ -387,18 +395,24 @@ export default function Home() {
                     העבודה שלי
                   </button>
                   <button
+                    className="menu-item"
+                    onClick={() => {
+                      setMenu(false);
+                      setPanel('install');
+                    }}
+                  >
+                    <Icon name="download" size={17} />
+                    הורדת האפליקציה
+                  </button>
+                  <button
                     className="menu-item danger"
                     onClick={() => {
                       setMenu(false);
-                      lib.logout();
+                      setExitAsk(true);
                     }}
                   >
                     <Icon name="exit" size={17} />
-                    יציאה מהחשבון
-                  </button>
-                  <button className="menu-item danger" onClick={exitApp}>
-                    <Icon name="close" size={17} />
-                    סגירת האפליקציה
+                    יציאה
                   </button>
                 </div>
               </>
@@ -728,32 +742,89 @@ export default function Home() {
         <Icon name="plus" size={24} />
       </button>
 
+      {closeFailed && (
+        <div className="sheet" onClick={(e) => e.target === e.currentTarget && setCloseFailed(false)}>
+          <div className="exitbox">
+            <span className="exitbox-icon">
+              <Icon name="alert" size={26} />
+            </span>
+            <h3>הדפדפן לא מרשה לסגור את החלון</h3>
+            <p>
+              סגירה אוטומטית עובדת רק באפליקציה המותקנת. אפשר לסגור את הלשונית ידנית, או לבחור
+              יציאה מלאה שנועלת את האתר.
+            </p>
+            <div className="exitbox-col">
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setCloseFailed(false);
+                  goHome();
+                  lib.exitAll();
+                }}
+              >
+                <Icon name="exit" size={18} />
+                יציאה מלאה — חזרה למסך הסיסמה
+              </button>
+              <button className="btn btn-ghost" onClick={() => setCloseFailed(false)}>
+                חזרה לאפליקציה
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {exitAsk && (
         <div className="sheet" onClick={(e) => e.target === e.currentTarget && setExitAsk(false)}>
           <div className="exitbox">
             <span className="exitbox-icon">
               <Icon name="exit" size={26} />
             </span>
-            <h3>הדפדפן לא מרשה לסגור את החלון</h3>
+            <h3>יציאה</h3>
             <p>
-              סגירה אוטומטית עובדת רק באפליקציה המותקנת. אפשר לסגור את הלשונית ידנית, או לצאת
-              מהחשבון כאן.
+              יציאה מלאה נועלת את האתר כולו וחוזרת למסך סיסמת הכניסה. משם המסלול מתחיל מחדש:
+              סיסמת כניסה, ואז שם משתמש וסיסמה אישיים.
             </p>
-            <div className="exitbox-row">
+            <div className="exitbox-col">
               <button
                 className="btn btn-primary"
                 onClick={() => {
                   setExitAsk(false);
-                  lib.logout();
+                  goHome();
+                  lib.exitAll();
                 }}
               >
                 <Icon name="exit" size={18} />
-                יציאה מהחשבון
+                יציאה מלאה — חזרה למסך הסיסמה
+              </button>
+              <button
+                className="btn btn-soft"
+                onClick={() => {
+                  setExitAsk(false);
+                  goHome();
+                  lib.logout();
+                }}
+              >
+                <Icon name="bookmark" size={18} />
+                יציאה מהחשבון בלבד
+              </button>
+              <button
+                className="btn btn-soft"
+                onClick={() => {
+                  setExitAsk(false);
+                  closeWindow();
+                }}
+              >
+                <Icon name="close" size={18} />
+                סגירת האפליקציה
               </button>
               <button className="btn btn-ghost" onClick={() => setExitAsk(false)}>
                 חזרה לאפליקציה
               </button>
             </div>
+            <p className="exitbox-note">
+              סגירת האפליקציה עובדת באפליקציית האנדרואיד. בדפדפן רגיל צריך לסגור את הלשונית ידנית —
+              ולכן יציאה מלאה היא מה שמנתק באמת במכשיר משותף.
+            </p>
           </div>
         </div>
       )}
@@ -803,6 +874,8 @@ export default function Home() {
       )}
 
       {panel === 'backup' && <BackupPanel lib={lib} onClose={() => setPanel(null)} />}
+
+      {panel === 'install' && <InstallPanel onClose={() => setPanel(null)} />}
     </>
   );
 }

@@ -1,5 +1,7 @@
 import {
   checkPasscode,
+  clearCookie,
+  clearGateCookie,
   createGate,
   gateCookie,
   gateRequired,
@@ -45,4 +47,20 @@ export async function POST(request) {
   }
 
   return Response.json({ ok: true }, { headers: { 'Set-Cookie': gateCookie(createGate()) } });
+}
+
+/**
+ * יציאה מלאה: סוגר גם את החשבון האישי וגם את שער האתר, כך שהמסך הבא
+ * הוא מסך סיסמת הכניסה. במכשיר משותף זו היציאה שבאמת מנתקת — יציאה
+ * מהחשבון לבדה משאירה את השער פתוח, וכל אחד שלוקח את הטלפון
+ * מגיע ישר למסך ההתחברות.
+ *
+ * אין כאן בדיקת הרשאה בכוונה: מחיקת העוגיות של מי ששלח את הבקשה
+ * היא פעולה על עצמו בלבד, ואי אפשר לנתק דרכה אף אחד אחר.
+ */
+export async function DELETE() {
+  const headers = new Headers();
+  headers.append('Set-Cookie', clearCookie());
+  headers.append('Set-Cookie', clearGateCookie());
+  return Response.json({ ok: true }, { headers });
 }

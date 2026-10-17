@@ -207,6 +207,10 @@ export function gateCookie(token) {
   return `${GATE_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${GATE_AGE}`;
 }
 
+export function clearGateCookie() {
+  return `${GATE_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+}
+
 export function gateFromRequest(request) {
   if (!gateRequired()) return true;
   const raw = request.headers.get('cookie') || '';

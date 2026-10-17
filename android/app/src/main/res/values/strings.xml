@@ -6,4 +6,5 @@
     <string name="save_failed">שמירת הגיבוי נכשלה</string>
     <string name="print_failed">ההדפסה אינה זמינה במכשיר הזה</string>
     <string name="no_browser">לא נמצא דפדפן לפתיחת הקישור</string>
+    <string name="back_again">לחצי שוב ליציאה</string>
 </resources>

@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView web;
     private SwipeRefreshLayout refresh;
     private boolean loadFailed = false;
+    private long lastBack = 0;
     private ValueCallback<Uri[]> filePicker;
     private ActivityResultLauncher<Intent> pickFile;
 
@@ -156,11 +157,25 @@ public class MainActivity extends AppCompatActivity {
             web.loadUrl(SITE);
         });
 
+        /*
+         * כפתור החזרה הפיזי. בתוך האפליקציה הוא מנווט אחורה; בשורש הוא
+         * לא סוגר מיד — לחיצה אחת בטעות אסור שתזרוק את רדה החוצה באמצע
+         * מתכון. לחיצה שנייה תוך שתי שניות סוגרת.
+         */
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (web.canGoBack()) web.goBack();
-                else finish();
+                if (web.canGoBack()) {
+                    web.goBack();
+                    return;
+                }
+                long now = System.currentTimeMillis();
+                if (now - lastBack < 2000) {
+                    finishAndRemoveTask();
+                    return;
+                }
+                lastBack = now;
+                Toast.makeText(MainActivity.this, R.string.back_again, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -201,6 +216,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);
         web.saveState(out);
+    }
+
+    /**
+     * כותב את העוגיות לדיסק. בלי זה "יציאה מלאה" באתר מוחקת את עוגיית
+     * השער רק בזיכרון, והאפליקציה שנפתחת מחדש חוזרת ישר פנימה —
+     * בדיוק מה שהיציאה הייתה אמורה למנוע.
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        CookieManager.getInstance().flush();
     }
 
     public class Bridge {
@@ -261,6 +287,15 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, R.string.print_failed, Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+
+        /**
+         * נקרא אחרי "יציאה מלאה" באתר. השרת כבר מחק את העוגיות, וכאן
+         * רק מוודאים שהמחיקה נכתבת לדיסק מיד ולא רק כשהאפליקציה נעצרת.
+         */
+        @JavascriptInterface
+        public void sessionCleared() {
+            runOnUiThread(() -> CookieManager.getInstance().flush());
         }
 
         /** כפתור "סגירת האפליקציה" באתר */

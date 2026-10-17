@@ -386,6 +386,31 @@ export function useLibrary() {
       openGate: () => {
         setGate((g) => ({ ...g, open: true }));
       },
+
+      /**
+       * יציאה מלאה — מהחשבון ומשער האתר גם יחד, חזרה למסך סיסמת הכניסה.
+       * משם המסלול מתחיל מהתחלה: סיסמת כניסה, ואז שם משתמש וסיסמה אישיים.
+       */
+      async exitAll() {
+        try {
+          await fetch('/api/gate', { method: 'DELETE' });
+        } catch {}
+        // באפליקציית האנדרואיד העוגיות נכתבות לדיסק רק בהזדמנות; בלי
+        // הדחיפה הזו פתיחה מחדש הייתה נכנסת ישר פנימה
+        try {
+          window.RadaNative?.sessionCleared?.();
+        } catch {}
+        const u = userRef.current;
+        try {
+          if (u) localStorage.removeItem(cacheKey(u.id));
+          localStorage.removeItem('rada-user');
+        } catch {}
+        setUser(null);
+        userRef.current = null;
+        setData(EMPTY);
+        // כשאין סיסמת כניסה מוגדרת בשרת, יציאה מלאה היא פשוט יציאה מהחשבון
+        setGate((g) => (g.required ? { ...g, open: false } : g));
+      },
       sync,
       storageFull,
       library,

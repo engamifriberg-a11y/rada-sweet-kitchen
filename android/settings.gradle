@@ -13,5 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "המטבח של ראדה"
+// שם ה־ASCII נועד לקובץ וליעדי הבנייה; השם שרואים במכשיר הוא @string/app_name
+rootProject.name = "rada-kitchen"
 include ':app'

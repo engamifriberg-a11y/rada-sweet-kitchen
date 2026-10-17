@@ -14,11 +14,39 @@ android {
         versionName "1.0"
     }
 
+    /*
+     * חתימה. המפתח לא נמצא במאגר — המאגר ציבורי, ומפתח חתימה שדלף
+     * מאפשר לכל אחד לפרסם עדכון מזויף לאפליקציה.
+     *
+     * הנתיב והסיסמאות מגיעים מ־keystore.properties מקומי (שאינו במאגר)
+     * או ממשתני סביבה, ואם אין אף אחד מהם הבנייה פשוט יוצאת ללא חתימה
+     * במקום להיכשל.
+     */
+    signingConfigs {
+        release {
+            def props = new Properties()
+            def file = rootProject.file('keystore.properties')
+            if (file.exists()) {
+                file.withInputStream { props.load(it) }
+            }
+            def path = props.getProperty('storeFile') ?: System.getenv('RADA_KEYSTORE')
+            if (path) {
+                storeFile rootProject.file(path)
+                storePassword props.getProperty('storePassword') ?: System.getenv('RADA_STORE_PASSWORD')
+                keyAlias props.getProperty('keyAlias') ?: System.getenv('RADA_KEY_ALIAS')
+                keyPassword props.getProperty('keyPassword') ?: System.getenv('RADA_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
             // ללא טשטוש קוד: האפליקציה היא מעטפת דקה, אין מה להגן עליו
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
