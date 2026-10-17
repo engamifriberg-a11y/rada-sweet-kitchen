@@ -2686,21 +2686,22 @@ const ART = {
     <>
       <Plate w={310} />
       <g>
-        <ellipse cx="200" cy="158" rx="124" ry="60" fill="#A8692F" />
-        <ellipse cx="200" cy="151" rx="124" ry="60" fill="#D9A054" />
-        <ellipse cx="200" cy="151" rx="124" ry="60" fill="url(#pa-crumb)" opacity=".32" />
+        <ellipse cx="200" cy="158" rx="124" ry="60" fill="#8E5420" />
+        <ellipse cx="200" cy="151" rx="124" ry="60" fill="#EBBD71" />
+        <ellipse cx="200" cy="151" rx="124" ry="60" fill="url(#pa-crumb)" opacity=".3" />
+        {/* חריץ הגלגול — הוא מה שמזהה את המאפה, ולכן בניגודיות גבוהה */}
         <polyline
-          points={coilPoints(200, 153, 4.4, 116, 0.49)}
+          points={coilPoints(200, 152, 3.4, 118, 0.49)}
           fill="none"
-          stroke="#A8692F"
-          strokeWidth="7.5"
+          stroke="#7E4518"
+          strokeWidth="6.5"
           strokeLinecap="round"
         />
         <polyline
-          points={coilPoints(200, 150, 4.4, 116, 0.49)}
+          points={coilPoints(200, 148.5, 3.4, 118, 0.49)}
           fill="none"
-          stroke="#F0CE8E"
-          strokeWidth="4"
+          stroke="#FCEAC0"
+          strokeWidth="3"
           strokeLinecap="round"
         />
         <ellipse cx="200" cy="151" rx="124" ry="60" fill="url(#pa-sheen)" opacity=".42" />
