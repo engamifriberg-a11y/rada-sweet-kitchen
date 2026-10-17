@@ -139,6 +139,86 @@ export function userFromRequest(request) {
   return null;
 }
 
+/* ── שער האתר ─────────────────────────────
+   סיסמה משותפת אחת לפני מסך הכניסה, כדי שלא כל מי שמגיע לכתובת
+   יוכל אפילו לנסות להירשם. היא נבדקת בשרת ומונפקת כעוגייה חתומה
+   נפרדת — חסימה בממשק בלבד לא הייתה חוסמת כלום. */
+
+export const GATE_COOKIE = 'rada_gate';
+const GATE_AGE = 180 * 24 * 60 * 60;
+
+export function gateRequired() {
+  return Boolean(process.env.SITE_PASSCODE);
+}
+
+export function checkPasscode(given) {
+  const want = process.env.SITE_PASSCODE;
+  if (!want) return true;
+  const a = Buffer.from(String(given || ''), 'utf8');
+  const b = Buffer.from(want, 'utf8');
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+export function createGate() {
+  const exp = Date.now() + GATE_AGE * 1000;
+  // חתימה על ערך הסיסמה הנוכחית: שינוי הסיסמה מבטל אוטומטית
+  // את כל השערים שהונפקו קודם
+  const stamp = crypto
+    .createHash('sha256')
+    .update(String(process.env.SITE_PASSCODE || ''))
+    .digest('base64url')
+    .slice(0, 16);
+  const payload = Buffer.from(JSON.stringify({ g: stamp, exp })).toString('base64url');
+  return `${payload}.${sign(payload)}`;
+}
+
+export function readGate(token) {
+  if (!gateRequired()) return true;
+  if (!token || typeof token !== 'string') return false;
+  const dot = token.lastIndexOf('.');
+  if (dot < 1) return false;
+  const payload = token.slice(0, dot);
+  let expectedBuf;
+  let givenBuf;
+  try {
+    expectedBuf = Buffer.from(sign(payload), 'utf8');
+    givenBuf = Buffer.from(token.slice(dot + 1), 'utf8');
+  } catch {
+    return false;
+  }
+  if (expectedBuf.length !== givenBuf.length) return false;
+  if (!crypto.timingSafeEqual(expectedBuf, givenBuf)) return false;
+  try {
+    const { g, exp } = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (typeof exp !== 'number' || Date.now() > exp) return false;
+    const stamp = crypto
+      .createHash('sha256')
+      .update(String(process.env.SITE_PASSCODE || ''))
+      .digest('base64url')
+      .slice(0, 16);
+    return g === stamp;
+  } catch {
+    return false;
+  }
+}
+
+export function gateCookie(token) {
+  return `${GATE_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${GATE_AGE}`;
+}
+
+export function gateFromRequest(request) {
+  if (!gateRequired()) return true;
+  const raw = request.headers.get('cookie') || '';
+  for (const part of raw.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq < 0) continue;
+    if (part.slice(0, eq).trim() !== GATE_COOKIE) continue;
+    return readGate(part.slice(eq + 1).trim());
+  }
+  return false;
+}
+
 /* ── ולידציה ─────────────────────────────── */
 
 export function normUsername(name) {

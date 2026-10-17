@@ -10,6 +10,7 @@ import BackupPanel from './components/BackupPanel';
 import { SECTIONS, searchRecipesDetailed, searchQueryUrls } from './data/recipes';
 import { useLibrary, readLegacy, clearLegacy } from './lib/library';
 import LoginScreen from './components/LoginScreen';
+import GateScreen from './components/GateScreen';
 
 const FILTERS = [
   { label: 'הכול', icon: 'grid' },
@@ -239,6 +240,11 @@ export default function Home() {
     );
   }
 
+  // שער האתר קודם, ואחריו החשבון האישי
+  if (lib.gate.required && !lib.gate.open) {
+    return <GateScreen onOpen={lib.openGate} />;
+  }
+
   if (!lib.user) return <LoginScreen lib={lib} />;
 
   return (
@@ -274,7 +280,7 @@ export default function Home() {
             <Icon name="list" size={19} />
             {cartCount > 0 && <i className="pip">{cartCount}</i>}
           </button>
-          <button className="iconbtn" onClick={() => setPanel('backup')} aria-label="העבודה שלי">
+          <button className="iconbtn work" onClick={() => setPanel('backup')} aria-label="העבודה שלי">
             <Icon name="bookmark" size={19} />
           </button>
           <ThemeToggle />

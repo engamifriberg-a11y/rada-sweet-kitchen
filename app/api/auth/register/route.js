@@ -7,6 +7,7 @@ import {
   normUsername,
   newUserId,
   hasSecret,
+  gateFromRequest,
 } from '../../../lib/auth';
 import { createUser, findUser } from '../../../lib/store';
 import { hit, clientIp } from '../../../lib/ratelimit';
@@ -17,6 +18,12 @@ export const dynamic = 'force-dynamic';
 export async function POST(request) {
   if (!hasSecret()) {
     return Response.json({ error: 'השרת אינו מוגדר להתחברות.' }, { status: 503 });
+  }
+
+  // שער האתר נאכף כאן, בשרת. בלעדיו אפשר היה לדלג על מסך הסיסמה
+  // פשוט על ידי קריאה ישירה לנתיב.
+  if (!gateFromRequest(request)) {
+    return Response.json({ error: 'נדרשת סיסמת כניסה לאתר.', gate: true }, { status: 403 });
   }
 
   const gate = hit(`reg:${clientIp(request)}`, 5, 60 * 60 * 1000);

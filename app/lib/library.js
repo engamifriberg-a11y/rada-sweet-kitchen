@@ -220,6 +220,7 @@ export function shoppingListText(list) {
 export function useLibrary() {
   const [user, setUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+  const [gate, setGate] = useState({ required: false, open: true });
   const [data, setData] = useState(EMPTY);
   const [ready, setReady] = useState(false);
   const [sync, setSync] = useState('idle'); // idle | saving | offline | error
@@ -298,6 +299,7 @@ export function useLibrary() {
       const res = await fetch('/api/auth/me', { cache: 'no-store' });
       const j = await res.json();
       me = j?.user || null;
+      setGate({ required: Boolean(j?.gateRequired), open: j?.gateOpen !== false });
     } catch {
       // אין רשת: אם יש התחברות קודמת שמורה, ממשיכים ממנה
       try {
@@ -368,6 +370,10 @@ export function useLibrary() {
       ready,
       user,
       authReady,
+      gate,
+      openGate: () => {
+        setGate((g) => ({ ...g, open: true }));
+      },
       sync,
       storageFull,
       library,
@@ -557,7 +563,7 @@ export function useLibrary() {
         return added;
       },
     }),
-    [data, ready, user, authReady, sync, storageFull, library, update, load]
+    [data, ready, user, authReady, gate, sync, storageFull, library, update, load]
   );
 
   return api;
